@@ -107,6 +107,18 @@ contract PSMVariant1ActionsTest is Test {
         actions.swapAndDeposit(address(this), 100e6, 99.5e18);
     }
 
+    function test_swapAndDeposit_amountOutTooLowExistingBalance_boundary() public {
+        gem.approve(address(actions), 100e6);
+        gem.mint(address(this), 100e6);
+        gem.mint(address(actions), 1e6);  // Mint some dust into the actions
+
+        // Dust should not effect the boundary numbers
+        vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
+        actions.swapAndDeposit(address(this), 100e6, 100e18 + 1);
+
+        actions.swapAndDeposit(address(this), 100e6, 100e18);
+    }
+
     function test_swapAndDeposit_differentReceiver() public {
         gem.approve(address(actions), 100e6);
         gem.mint(address(this), 100e6);
@@ -213,7 +225,65 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(actions));
     }
 
+    function test_withdrawAndSwap_insufficientBalance_boundary() public {
+        _deposit(address(this), 100e6);
 
+        savingsToken.approve(address(actions), 80e18);
+        savingsToken.burn(address(this), 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+
+        savingsToken.mint(address(this), 1);
+
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+    }
+
+    function test_withdrawAndSwap_insufficientApproval_boundary() public {
+        _deposit(address(this), 100e6);
+
+        savingsToken.approve(address(actions), 80e18 - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+
+        savingsToken.approve(address(actions), 80e18);
+
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+    }
+
+    function test_withdrawAndSwap_amountInTooHigh_boundary() public {
+        _deposit(address(this), 100e6);
+        savingsToken.approve(address(actions), 80e18);
+
+        vm.expectRevert("PSMVariant1Actions/amount-in-too-high");
+        actions.withdrawAndSwap(address(this), 100e6, 100e18 - 1);
+
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+    }
+
+    function test_withdrawAndSwap_amountInTooHighWithFee_boundary() public {
+        _deposit(address(this), 100.5e6);  // Mint 0.5% more to pay for the fee
+        psm.__setTout(0.005e18);  // 0.5% fee
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        vm.expectRevert("PSMVariant1Actions/amount-in-too-high");
+        actions.withdrawAndSwap(address(this), 100e6, 100.5e18 - 1);
+
+        actions.withdrawAndSwap(address(this), 100e6, 100.5e18);
+    }
+
+    function test_withdrawAndSwap_amountInTooHighExistingBalance_boundary() public {
+        _deposit(address(this), 100e6);
+        savingsToken.approve(address(actions), 80e18);
+        dai.mint(address(actions), 1e18);  // Mint some dust into the actions
+
+        // Dust should not effect the boundary numbers
+        vm.expectRevert("PSMVariant1Actions/amount-in-too-high");
+        actions.withdrawAndSwap(address(this), 100e6, 100e18 - 1);
+
+        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+    }
 
     /******************************************************************************************************************/
     /*** Helper functions                                                                                           ***/
@@ -232,6 +302,12 @@ contract PSMVariant1ActionsTest is Test {
             daiBalance:          0,
             savingsTokenBalance: 0
         });
+    }
+
+    function _deposit(address _receiver, uint256 amount) internal {
+        gem.mint(address(this), amount);
+        gem.approve(address(actions), amount);
+        actions.swapAndDeposit(_receiver, amount, 0);
     }
     
 }

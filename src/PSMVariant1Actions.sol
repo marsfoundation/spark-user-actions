@@ -80,12 +80,15 @@ contract PSMVariant1Actions {
         uint256 amountOut,
         uint256 maxAmountIn
     ) external {
-        savingsToken.withdraw(amountOut * GEM_CONVERSION_FACTOR, address(this), msg.sender);
+        // Calculate the exact amount of required dai based on the expected output
+        // We are performing the calculation at https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol#L121
+        uint256 amountOut18 = amountOut * GEM_CONVERSION_FACTOR;
+        savingsToken.withdraw(amountOut18 + amountOut18 * psm.tout() / 1e18, address(this), msg.sender);
         
         // There may be a balance in this contract, so we determine the difference
         uint256 balanceBefore = dai.balanceOf(address(this));
         psm.buyGem(receiver, amountOut);
-        uint256 amountIn = dai.balanceOf(address(this)) - balanceBefore;
+        uint256 amountIn = balanceBefore - dai.balanceOf(address(this));
         require(amountIn <= maxAmountIn, "PSMVariant1Actions/amount-in-too-high");
     }
     
