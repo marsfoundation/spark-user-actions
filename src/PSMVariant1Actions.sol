@@ -16,6 +16,11 @@ interface GemJoinLike {
     function gem() external view returns (address);
 }
 
+/**
+ * @notice Actions for swapping in PSM and depositing in an ERC4626 token.
+ * @dev    This is for the first version of the PSM.
+ *         Code: https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol
+ */
 contract PSMVariant1Actions {
 
     uint256 private immutable GEM_CONVERSION_FACTOR;
@@ -99,8 +104,9 @@ contract PSMVariant1Actions {
         uint256 assets = savingsToken.redeem(shares, address(this), msg.sender);
 
         // Calculate the exact amount of gems we expect to receive given this amount of assets
-        // TODO this leaves a dust amount in the contract, maybe we don't care?
-        uint256 amountOut = assets - (assets * psm.tout() / 1e18);
+        // We are reversing the calculation at https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol#L121
+        // Note: Due to rounding, this may leave dai dust in the contract
+        uint256 amountOut = assets * 1e18 / (GEM_CONVERSION_FACTOR * (1e18 + psm.tout()));
         require(amountOut >= minAmountOut, "PSMVariant1Actions/amount-out-too-low");
         
         // There may be a balance in this contract, so we determine the difference
