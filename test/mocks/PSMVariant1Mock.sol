@@ -25,6 +25,7 @@ contract PSMVariant1Mock {
 
     MockERC20 public dai;
     MockERC20 public gem;
+    GemJoin   public gemJoin;
 
     uint256 public tin;
     uint256 public tout;
@@ -34,8 +35,10 @@ contract PSMVariant1Mock {
     constructor(MockERC20 _dai, MockERC20 _gem) {
         dai = _dai;
         gem = _gem;
+        
+        gemJoin = new GemJoin(gem);
 
-        to18ConversionFactor = 10 ** (18 - IERC20(gem).decimals());
+        to18ConversionFactor = 10 ** (18 - gem.decimals());
     }
 
     function sellGem(address usr, uint256 gemAmt) external {

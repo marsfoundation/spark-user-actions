@@ -108,11 +108,7 @@ contract PSMVariant1Actions {
         // Note: Due to rounding, this may leave dai dust in the contract
         uint256 amountOut = assets * 1e18 / (GEM_CONVERSION_FACTOR * (1e18 + psm.tout()));
         require(amountOut >= minAmountOut, "PSMVariant1Actions/amount-out-too-low");
-        
-        // There may be a balance in this contract, so we determine the difference
-        uint256 balanceBefore = gem.balanceOf(receiver);
         psm.buyGem(receiver, amountOut);
-        uint256 amountIn = gem.balanceOf(receiver) - balanceBefore;
     }
 
 }

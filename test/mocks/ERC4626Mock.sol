@@ -5,12 +5,12 @@ import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
 contract ERC4626Mock is MockERC20 {
 
-    ERC20Mock public asset;
+    MockERC20 public asset;
 
     uint256 public shareConversionRate = 1e18;
 
     constructor(
-        ERC20Mock _asset,
+        MockERC20 _asset,
         string memory name,
         string memory symbol,
         uint8 decimals
@@ -20,21 +20,21 @@ contract ERC4626Mock is MockERC20 {
 
     function deposit(uint256 assets, address receiver) external {
         asset.transferFrom(msg.sender, address(this), assets);
-        mint(receiver, assets * 1e18 / shareConversionRate);
+        _mint(receiver, assets * 1e18 / shareConversionRate);
     }
 
     function withdraw(uint256 assets, address receiver, address owner) external {
         uint256 shares = _divup(assets * 1e18, shareConversionRate);
-        _decreaseAllowance(owner, shares);
-        burn(owner, shares);
-        asset.transfer(assets, receiver);
+        _decreaseAllowance(owner, msg.sender, shares);
+        _burn(owner, shares);
+        asset.transfer(receiver, assets);
     }
 
     function redeem(uint256 shares, address receiver, address owner) external {
         uint256 assets = shares * shareConversionRate / 1e18;
-        _decreaseAllowance(owner, shares);
-        burn(owner, shares);
-        asset.transfer(assets, receiver);
+        _decreaseAllowance(owner, msg.sender, shares);
+        _burn(owner, shares);
+        asset.transfer(receiver, assets);
     }
 
     function __setShareConversionRate(uint256 rate) external {

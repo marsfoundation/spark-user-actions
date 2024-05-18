@@ -32,5 +32,18 @@ contract PSMVariant1ActionsTest is Test {
             address(savingsToken)
         );
     }
+
+    function test_constructor() public {
+        // For coverage
+        actions = new PSMVariant1Actions(
+            address(psm),
+            address(savingsToken)
+        );
+
+        assertEq(address(actions.psm()),          address(psm));
+        assertEq(address(actions.dai()),          address(dai));
+        assertEq(address(actions.gem()),          address(gem));
+        assertEq(address(actions.savingsToken()), address(savingsToken));
+    }
     
 }
