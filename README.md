@@ -7,7 +7,17 @@
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 
-Common user actions
+Common user actions for the Spark App.
+
+## Actions Available
+
+### PSMVariant1Actions
+
+Used for swapping via a PSM and depositing in an ERC4626 token contract. Supported actions:
+
+ * Deposit
+ * Withdraw (when exact output is required)
+ * Redeem (to redeem all savings tokens)
 
 ## Usage
 
