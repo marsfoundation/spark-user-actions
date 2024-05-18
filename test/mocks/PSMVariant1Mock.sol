@@ -5,29 +5,33 @@ import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
 contract GemJoin {
 
-    address public gem;
+    MockERC20 public gem;
 
-    constructor(address _gem) {
+    constructor(MockERC20 _gem) {
         gem = _gem;
     }
 
     function join(uint256 amount, address msgSender) external {
+        gem.transferFrom(msgSender, address(this), amount);
+    }
 
+    function exit(address usr, uint256 amount) external {
+        gem.transfer(usr, amount);
     }
 
 }
 
 contract PSMVariant1Mock {
 
-    address public dai;
-    address public gem;
+    MockERC20 public dai;
+    MockERC20 public gem;
 
     uint256 public tin;
     uint256 public tout;
 
     uint256 private to18ConversionFactor;
 
-    constructor(ERC20 _dai, ERC20 _gem) {
+    constructor(MockERC20 _dai, MockERC20 _gem) {
         dai = _dai;
         gem = _gem;
 
@@ -39,18 +43,15 @@ contract PSMVariant1Mock {
         uint256 fee = gemAmt18 * tin / 1e18;
         uint256 daiAmt = gemAmt18 - fee;
         dai.mint(usr, daiAmt);
-        gem.transferFrom(msg.sen)
+        gemJoin.join(gemAmt, msg.sender);
     }
 
     function buyGem(address usr, uint256 gemAmt) external {
-        uint256 gemAmt18 = mul(gemAmt, to18ConversionFactor);
-        uint256 fee = mul(gemAmt18, tout) / WAD;
-        uint256 daiAmt = add(gemAmt18, fee);
-        require(dai.transferFrom(msg.sender, address(this), daiAmt), "DssPsm/failed-transfer");
-        daiJoin.join(address(this), daiAmt);
-        vat.frob(ilk, address(this), address(this), address(this), -int256(gemAmt18), -int256(gemAmt18));
+        uint256 gemAmt18 = gemAmt * to18ConversionFactor;
+        uint256 fee = gemAmt18 * tout / 1e18;
+        uint256 daiAmt = gemAmt18 + fee;
+        dai.burn(msg.sender, daiAmt);
         gemJoin.exit(usr, gemAmt);
-        vat.move(address(this), vow, mul(fee, RAY));
     }
 
     function __setTin(uint256 _tin) external {
