@@ -111,54 +111,48 @@ contract PSMVariant1ActionsTest is Test {
         gem.approve(address(actions), 100e6);
         gem.mint(address(this), 100e6);
 
-        assertEq(gem.balanceOf(address(this)),          100e6);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 0);
-
-        assertEq(gem.balanceOf(receiver),          0);
-        assertEq(dai.balanceOf(receiver),          0);
-        assertEq(savingsToken.balanceOf(receiver), 0);
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(receiver));
+        _assertZeroBalances(address(actions));
 
         actions.swapAndDeposit(receiver, 100e6, 100e18);
 
-        assertEq(gem.balanceOf(address(this)),          0);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 0);
-
-        assertEq(gem.balanceOf(receiver),          0);
-        assertEq(dai.balanceOf(receiver),          0);
-        assertEq(savingsToken.balanceOf(receiver), 80e18);  // 100 dai / 1.25
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertZeroBalances(address(this));
+        _assertBalances({
+            u:                   receiver,
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 80e18  // 100 dai / 1.25
+        });
+        _assertZeroBalances(address(actions));
     }
 
     function test_swapAndDeposit_sameReceiver() public {
         gem.approve(address(actions), 100e6);
         gem.mint(address(this), 100e6);
 
-        assertEq(gem.balanceOf(address(this)),          100e6);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 0);
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
 
         actions.swapAndDeposit(address(this), 100e6, 100e18);
 
-        assertEq(gem.balanceOf(address(this)),          0);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 80e18);  // 100 dai / 1.25
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 80e18
+        });
+        _assertZeroBalances(address(actions));
     }
 
     function test_swapAndDeposit_fee() public {
@@ -166,23 +160,23 @@ contract PSMVariant1ActionsTest is Test {
         gem.approve(address(actions), 100e6);
         gem.mint(address(this), 100e6);
 
-        assertEq(gem.balanceOf(address(this)),          100e6);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 0);
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
 
         actions.swapAndDeposit(address(this), 100e6, 99.5e18);
 
-        assertEq(gem.balanceOf(address(this)),          0);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 79.6e18);  // 99.5 dai / 1.25
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 79.6e18  // 99.5 dai / 1.25
+        });
+        _assertZeroBalances(address(actions));
     }
 
     function testFuzz_swapAndDeposit(
@@ -200,23 +194,44 @@ contract PSMVariant1ActionsTest is Test {
         gem.approve(address(actions), type(uint256).max);
         gem.mint(address(this), amountIn);
 
-        assertEq(gem.balanceOf(address(this)),          amountIn);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), 0);
-
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          amountIn,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
 
         actions.swapAndDeposit(address(this), amountIn, minAmountOut);
 
-        assertEq(gem.balanceOf(address(this)),          0);
-        assertEq(dai.balanceOf(address(this)),          0);
-        assertEq(savingsToken.balanceOf(address(this)), expectedAmountOut * 1e18 / 1.25e18);
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: expectedAmountOut * 1e18 / 1.25e18
+        });
+        _assertZeroBalances(address(actions));
+    }
 
-        assertEq(gem.balanceOf(address(actions)),          0);
-        assertEq(dai.balanceOf(address(actions)),          0);
-        assertEq(savingsToken.balanceOf(address(actions)), 0);
+
+
+    /******************************************************************************************************************/
+    /*** Helper functions                                                                                           ***/
+    /******************************************************************************************************************/
+
+    function _assertBalances(address u, uint256 gemBalance, uint256 daiBalance, uint256 savingsTokenBalance) internal view {
+        assertEq(gem.balanceOf(u),          gemBalance);
+        assertEq(dai.balanceOf(u),          daiBalance);
+        assertEq(savingsToken.balanceOf(u), savingsTokenBalance);
+    }
+
+    function _assertZeroBalances(address u) internal view {
+        _assertBalances({
+            u:                   u,
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
     }
     
 }
