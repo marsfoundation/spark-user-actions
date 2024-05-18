@@ -12,6 +12,10 @@ import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
 contract PSMVariant1ActionsTest is Test {
 
+    // 1 trillion max of each
+    uint256 constant MAX_DAI_AMOUNT = 1e12 * 1e18;
+    uint256 constant MAX_GEM_AMOUNT = 1e12 * 1e6;
+
     MockERC20 dai;
     MockERC20 gem;
 
@@ -92,6 +96,17 @@ contract PSMVariant1ActionsTest is Test {
         actions.swapAndDeposit(address(this), 100e6, 100e18);
     }
 
+    function test_swapAndDeposit_amountOutTooLowWithFee_boundary() public {
+        psm.__setTin(0.005e18);  // 0.5% fee
+        gem.approve(address(actions), 100e6);
+        gem.mint(address(this), 100e6);
+
+        vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
+        actions.swapAndDeposit(address(this), 100e6, 99.5e18 + 1);
+
+        actions.swapAndDeposit(address(this), 100e6, 99.5e18);
+    }
+
     function test_swapAndDeposit_differentReceiver() public {
         gem.approve(address(actions), 100e6);
         gem.mint(address(this), 100e6);
@@ -140,6 +155,64 @@ contract PSMVariant1ActionsTest is Test {
         assertEq(gem.balanceOf(address(this)),          0);
         assertEq(dai.balanceOf(address(this)),          0);
         assertEq(savingsToken.balanceOf(address(this)), 80e18);  // 100 dai / 1.25
+
+        assertEq(gem.balanceOf(address(actions)),          0);
+        assertEq(dai.balanceOf(address(actions)),          0);
+        assertEq(savingsToken.balanceOf(address(actions)), 0);
+    }
+
+    function test_swapAndDeposit_fee() public {
+        psm.__setTin(0.005e18);  // 0.5% fee
+        gem.approve(address(actions), 100e6);
+        gem.mint(address(this), 100e6);
+
+        assertEq(gem.balanceOf(address(this)),          100e6);
+        assertEq(dai.balanceOf(address(this)),          0);
+        assertEq(savingsToken.balanceOf(address(this)), 0);
+
+        assertEq(gem.balanceOf(address(actions)),          0);
+        assertEq(dai.balanceOf(address(actions)),          0);
+        assertEq(savingsToken.balanceOf(address(actions)), 0);
+
+        actions.swapAndDeposit(address(this), 100e6, 99.5e18);
+
+        assertEq(gem.balanceOf(address(this)),          0);
+        assertEq(dai.balanceOf(address(this)),          0);
+        assertEq(savingsToken.balanceOf(address(this)), 79.6e18);  // 99.5 dai / 1.25
+
+        assertEq(gem.balanceOf(address(actions)),          0);
+        assertEq(dai.balanceOf(address(actions)),          0);
+        assertEq(savingsToken.balanceOf(address(actions)), 0);
+    }
+
+    function testFuzz_swapAndDeposit(
+        uint256 amountIn,
+        uint256 minAmountOut,
+        uint256 fee
+    ) public {
+        amountIn = bound(amountIn, 0, MAX_GEM_AMOUNT);
+        fee      = bound(fee, 0, 1e18);
+
+        uint256 expectedAmountOut = amountIn * 1e12 - (amountIn * 1e12 * fee / 1e18);
+        minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
+
+        psm.__setTin(fee);
+        gem.approve(address(actions), type(uint256).max);
+        gem.mint(address(this), amountIn);
+
+        assertEq(gem.balanceOf(address(this)),          amountIn);
+        assertEq(dai.balanceOf(address(this)),          0);
+        assertEq(savingsToken.balanceOf(address(this)), 0);
+
+        assertEq(gem.balanceOf(address(actions)),          0);
+        assertEq(dai.balanceOf(address(actions)),          0);
+        assertEq(savingsToken.balanceOf(address(actions)), 0);
+
+        actions.swapAndDeposit(address(this), amountIn, minAmountOut);
+
+        assertEq(gem.balanceOf(address(this)),          0);
+        assertEq(dai.balanceOf(address(this)),          0);
+        assertEq(savingsToken.balanceOf(address(this)), expectedAmountOut * 1e18 / 1.25e18);
 
         assertEq(gem.balanceOf(address(actions)),          0);
         assertEq(dai.balanceOf(address(actions)),          0);
