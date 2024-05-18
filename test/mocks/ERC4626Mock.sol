@@ -18,20 +18,21 @@ contract ERC4626Mock is MockERC20 {
         asset = _asset;
     }
 
-    function deposit(uint256 assets, address receiver) external {
+    function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
+        shares = assets * 1e18 / shareConversionRate;
         asset.transferFrom(msg.sender, address(this), assets);
-        _mint(receiver, assets * 1e18 / shareConversionRate);
+        _mint(receiver, shares);
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) external {
-        uint256 shares = _divup(assets * 1e18, shareConversionRate);
+    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares) {
+        shares = _divup(assets * 1e18, shareConversionRate);
         _decreaseAllowance(owner, msg.sender, shares);
         _burn(owner, shares);
         asset.transfer(receiver, assets);
     }
 
-    function redeem(uint256 shares, address receiver, address owner) external {
-        uint256 assets = shares * shareConversionRate / 1e18;
+    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets) {
+        assets = shares * shareConversionRate / 1e18;
         _decreaseAllowance(owner, msg.sender, shares);
         _burn(owner, shares);
         asset.transfer(receiver, assets);
