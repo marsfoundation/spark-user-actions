@@ -433,6 +433,110 @@ contract PSMVariant1ActionsTest is Test {
         actions.redeemAndSwap(address(this), 80.4e18, 100e6);
     }
 
+    function test_redeemAndSwap_differentReceiver() public {
+        _deposit(address(this), 100e6);
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 80e18
+        });
+        _assertZeroBalances(address(receiver));
+        _assertZeroBalances(address(actions));
+
+        actions.redeemAndSwap(receiver, 80e18, 100e6);
+
+        _assertZeroBalances(address(this));
+        _assertBalances({
+            u:                   receiver,
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
+    }
+
+    function test_redeemAndSwap_sameReceiver() public {
+        _deposit(address(this), 100e6);
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 80e18
+        });
+        _assertZeroBalances(address(actions));
+
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
+    }
+
+    function test_redeemAndSwap_fee() public {
+        _deposit(address(this), 100.5e6);
+        psm.__setTout(0.005e18);
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 80.4e18
+        });
+        _assertZeroBalances(address(actions));
+
+        actions.redeemAndSwap(address(this), 80.4e18, 100e6);
+
+        _assertBalances({
+            u:                   address(this),
+            gemBalance:          100e6,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+        _assertZeroBalances(address(actions));
+    }
+
+    function testFuzz_redeemAndSwap(
+        uint256 shares,
+        uint256 minAmountOut,
+        uint256 fee
+    ) public {
+        shares = bound(shares, 0, MAX_DAI_AMOUNT);
+        fee    = bound(fee, 0, 1e18);
+
+        uint256 assets = shares * 1.25e18 / 1e18;
+        uint256 expectedAmountOut = assets * 1e18 / (1e12 * (1e18 + fee));
+        minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
+
+        psm.__setTout(fee);
+        savingsToken.approve(address(actions), type(uint256).max);
+        _deposit(address(this), assets / 1e12 + 1);  // Add one extra to deal with shares rounding
+
+        assertEq(gem.balanceOf(address(this)),                   0);
+        assertEq(dai.balanceOf(address(this)),                   0);
+        assertApproxEqAbs(savingsToken.balanceOf(address(this)), shares, 1e12);
+        _assertZeroBalances(address(actions));
+
+        actions.redeemAndSwap(address(this), shares, minAmountOut);
+
+        assertEq(gem.balanceOf(address(this)),                   expectedAmountOut);
+        assertEq(dai.balanceOf(address(this)),                   0);
+        assertApproxEqAbs(savingsToken.balanceOf(address(this)), 0, 1e12);
+
+        assertEq(gem.balanceOf(address(actions)),          0);
+        assertLt(dai.balanceOf(address(actions)),          1e18);  // PSM swap may leave some dust
+        assertEq(savingsToken.balanceOf(address(actions)), 0);
+    }
+
     /******************************************************************************************************************/
     /*** Helper functions                                                                                           ***/
     /******************************************************************************************************************/
