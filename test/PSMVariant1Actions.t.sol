@@ -385,6 +385,54 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(actions));
     }
 
+    function test_redeemAndSwap_insufficientBalance_boundary() public {
+        _deposit(address(this), 100e6);
+
+        savingsToken.approve(address(actions), 80e18);
+        savingsToken.burn(address(this), 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+
+        savingsToken.mint(address(this), 1);
+
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+    }
+
+    function test_redeemAndSwap_insufficientApproval_boundary() public {
+        _deposit(address(this), 100e6);
+
+        savingsToken.approve(address(actions), 80e18 - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+
+        savingsToken.approve(address(actions), 80e18);
+
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+    }
+
+    function test_redeemAndSwap_amountOutTooLow_boundary() public {
+        _deposit(address(this), 100e6);
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
+        actions.redeemAndSwap(address(this), 80e18, 100e6 + 1);
+
+        actions.redeemAndSwap(address(this), 80e18, 100e6);
+    }
+
+    function test_redeemAndSwap_amountOutTooLowWithFee_boundary() public {
+        _deposit(address(this), 100.5e6);  // Mint 0.5% more to pay for the fee
+        psm.__setTout(0.005e18);  // 0.5% fee
+        savingsToken.approve(address(actions), type(uint256).max);
+
+        vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
+        actions.redeemAndSwap(address(this), 80.4e18, 100e6 + 1);
+
+        actions.redeemAndSwap(address(this), 80.4e18, 100e6);
+    }
+
     /******************************************************************************************************************/
     /*** Helper functions                                                                                           ***/
     /******************************************************************************************************************/
