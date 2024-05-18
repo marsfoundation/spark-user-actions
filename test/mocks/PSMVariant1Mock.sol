@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "lib/forge-std/src/interfaces/IERC20.sol";
+import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
 contract GemJoin {
 
@@ -9,6 +9,10 @@ contract GemJoin {
 
     constructor(address _gem) {
         gem = _gem;
+    }
+
+    function join(uint256 amount, address msgSender) external {
+
     }
 
 }
@@ -23,10 +27,7 @@ contract PSMVariant1Mock {
 
     uint256 private to18ConversionFactor;
 
-    constructor(
-        address _dai,
-        address _gem
-    ) {
+    constructor(ERC20 _dai, ERC20 _gem) {
         dai = _dai;
         gem = _gem;
 
@@ -37,7 +38,8 @@ contract PSMVariant1Mock {
         uint256 gemAmt18 = gemAmt * to18ConversionFactor;
         uint256 fee = gemAmt18 * tin / 1e18;
         uint256 daiAmt = gemAmt18 - fee;
-        dai.mint
+        dai.mint(usr, daiAmt);
+        gem.transferFrom(msg.sen)
     }
 
     function buyGem(address usr, uint256 gemAmt) external {
