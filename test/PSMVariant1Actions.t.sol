@@ -239,7 +239,7 @@ contract PSMVariant1ActionsSwapAndDepositTests is PSMVariant1ActionsBase {
         minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
 
         psm.__setTin(fee);
-        gem.approve(address(actions), type(uint256).max);
+        gem.approve(address(actions), amountIn);
         gem.mint(address(this), amountIn);
 
         _assertBalances({
@@ -306,7 +306,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
     function test_withdrawAndSwap_amountInTooHighWithFee_boundary() public {
         _deposit(address(this), 100.5e6);  // Mint 0.5% more to pay for the fee
         psm.__setTout(0.005e18);  // 0.5% fee
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80.4e18);
 
         vm.expectRevert("PSMVariant1Actions/amount-in-too-high");
         actions.withdrawAndSwap(address(this), 100e6, 100.5e18 - 1);
@@ -328,7 +328,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
 
     function test_withdrawAndSwap_differentReceiver() public {
         _deposit(address(this), 100e6);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80e18);
 
         _assertBalances({
             user:                address(this),
@@ -354,7 +354,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
 
     function test_withdrawAndSwap_sameReceiver() public {
         _deposit(address(this), 100e6);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80e18);
 
         _assertBalances({
             user:                address(this),
@@ -379,7 +379,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
     function test_withdrawAndSwap_fee() public {
         _deposit(address(this), 100.5e6);
         psm.__setTout(0.005e18);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80.4e18);
 
         _assertBalances({
             user:                address(this),
@@ -413,7 +413,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
         maxAmountIn = bound(maxAmountIn, expectedAmountIn, type(uint256).max);
 
         psm.__setTout(fee);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), expectedAmountIn * 1e18 / 1.25e18 + 1e12);  // Approve some extra dust for rounding
         _deposit(address(this), expectedAmountIn / 1e12 + 1);  // Add one extra to deal with shares rounding
 
         assertEq(gem.balanceOf(address(this)),                   0);
@@ -463,7 +463,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
 
     function test_redeemAndSwap_amountOutTooLow_boundary() public {
         _deposit(address(this), 100e6);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80e18);
 
         vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
         actions.redeemAndSwap(address(this), 80e18, 100e6 + 1);
@@ -474,7 +474,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
     function test_redeemAndSwap_amountOutTooLowWithFee_boundary() public {
         _deposit(address(this), 100.5e6);  // Mint 0.5% more to pay for the fee
         psm.__setTout(0.005e18);  // 0.5% fee
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80.4e18);
 
         vm.expectRevert("PSMVariant1Actions/amount-out-too-low");
         actions.redeemAndSwap(address(this), 80.4e18, 100e6 + 1);
@@ -484,7 +484,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
 
     function test_redeemAndSwap_differentReceiver() public {
         _deposit(address(this), 100e6);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80e18);
 
         _assertBalances({
             user:                address(this),
@@ -510,7 +510,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
 
     function test_redeemAndSwap_sameReceiver() public {
         _deposit(address(this), 100e6);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80e18);
 
         _assertBalances({
             user:                address(this),
@@ -535,7 +535,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
     function test_redeemAndSwap_fee() public {
         _deposit(address(this), 100.5e6);
         psm.__setTout(0.005e18);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), 80.4e18);
 
         _assertBalances({
             user:                address(this),
@@ -570,7 +570,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
         minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
 
         psm.__setTout(fee);
-        savingsToken.approve(address(actions), type(uint256).max);
+        savingsToken.approve(address(actions), shares + 1e12);  // Approve some extra for rounding
         _deposit(address(this), assets / 1e12 + 1);  // Add one extra to deal with shares rounding
 
         assertEq(gem.balanceOf(address(this)),                   0);
