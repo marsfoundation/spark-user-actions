@@ -233,7 +233,7 @@ contract PSMVariant1ActionsSwapAndDepositTests is PSMVariant1ActionsBase {
         uint256 fee
     ) public {
         amountIn = bound(amountIn, 0, MAX_GEM_AMOUNT);
-        fee      = bound(fee, 0, 1e18);
+        fee      = bound(fee,      0, 1e18);
 
         uint256 expectedAmountOut = amountIn * 1e12 - (amountIn * 1e12 * fee / 1e18);
         minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
@@ -407,7 +407,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
         uint256 fee
     ) public {
         amountOut = bound(amountOut, 0, MAX_GEM_AMOUNT);
-        fee       = bound(fee, 0, 1e18);
+        fee       = bound(fee,       0, 1e18);
 
         uint256 expectedAmountIn = amountOut * 1e12 + (amountOut * 1e12 * fee / 1e18);
         maxAmountIn = bound(maxAmountIn, expectedAmountIn, type(uint256).max);
@@ -563,7 +563,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
         uint256 fee
     ) public {
         shares = bound(shares, 0, MAX_DAI_AMOUNT);
-        fee    = bound(fee, 0, 1e18);
+        fee    = bound(fee,    0, 1e18);
 
         uint256 assets = shares * 1.25e18 / 1e18;
         uint256 expectedAmountOut = assets * 1e18 / (1e12 * (1e18 + fee));
