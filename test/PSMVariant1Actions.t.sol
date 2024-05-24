@@ -10,7 +10,7 @@ import { PSMVariant1Mock } from "./mocks/PSMVariant1Mock.sol";
 
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
-contract PSMVariant1ActionsTest is Test {
+contract PSMVariant1ActionsBase is Test {
 
     // 1 trillion max of each
     uint256 constant MAX_DAI_AMOUNT = 1e12 * 1e18;
@@ -45,6 +45,35 @@ contract PSMVariant1ActionsTest is Test {
         );
     }
 
+    /******************************************************************************************************************/
+    /*** Helper functions                                                                                           ***/
+    /******************************************************************************************************************/
+
+    function _assertBalances(address user, uint256 gemBalance, uint256 daiBalance, uint256 savingsTokenBalance) internal view {
+        assertEq(gem.balanceOf(user),          gemBalance);
+        assertEq(dai.balanceOf(user),          daiBalance);
+        assertEq(savingsToken.balanceOf(user), savingsTokenBalance);
+    }
+
+    function _assertZeroBalances(address u) internal view {
+        _assertBalances({
+            user:                u,
+            gemBalance:          0,
+            daiBalance:          0,
+            savingsTokenBalance: 0
+        });
+    }
+
+    function _deposit(address _receiver, uint256 amount) internal {
+        gem.mint(address(this), amount);
+        gem.approve(address(actions), amount);
+        actions.swapAndDeposit(_receiver, amount, 0);
+    }
+
+}
+
+contract PSMVariant1ActionsConstructorTests is PSMVariant1ActionsBase {
+
     function test_constructor() public {
         // For coverage
         actions = new PSMVariant1Actions(
@@ -61,6 +90,10 @@ contract PSMVariant1ActionsTest is Test {
         assertEq(dai.allowance(address(actions), address(psm)),           type(uint256).max);
         assertEq(dai.allowance(address(actions), address(savingsToken)),  type(uint256).max);
     }
+
+}
+
+contract PSMVariant1ActionsSwapAndDepositTests is PSMVariant1ActionsBase {
 
     function test_swapAndDeposit_insufficientBalance_boundary() public {
         gem.approve(address(actions), 100e6);
@@ -124,7 +157,7 @@ contract PSMVariant1ActionsTest is Test {
         gem.mint(address(this), 100e6);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -136,7 +169,7 @@ contract PSMVariant1ActionsTest is Test {
 
         _assertZeroBalances(address(this));
         _assertBalances({
-            u:                   receiver,
+            user:                receiver,
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18  // 100 dai / 1.25
@@ -150,7 +183,7 @@ contract PSMVariant1ActionsTest is Test {
         gem.mint(address(this), 100e6);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -160,7 +193,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountOut = actions.swapAndDeposit(address(this), 100e6, 100e18);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18
@@ -175,7 +208,7 @@ contract PSMVariant1ActionsTest is Test {
         gem.mint(address(this), 100e6);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -185,7 +218,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountOut = actions.swapAndDeposit(address(this), 100e6, 99.5e18);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 79.6e18  // 99.5 dai / 1.25
@@ -210,7 +243,7 @@ contract PSMVariant1ActionsTest is Test {
         gem.mint(address(this), amountIn);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          amountIn,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -220,7 +253,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountOut = actions.swapAndDeposit(address(this), amountIn, minAmountOut);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: expectedAmountOut * 1e18 / 1.25e18
@@ -228,6 +261,10 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(actions));
         assertEq(amountOut, expectedAmountOut);
     }
+
+}
+
+contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
 
     function test_withdrawAndSwap_insufficientBalance_boundary() public {
         _deposit(address(this), 100e6);
@@ -294,7 +331,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18
@@ -306,7 +343,7 @@ contract PSMVariant1ActionsTest is Test {
 
         _assertZeroBalances(address(this));
         _assertBalances({
-            u:                   receiver,
+            user:                receiver,
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -320,7 +357,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18
@@ -330,7 +367,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountIn = actions.withdrawAndSwap(address(this), 100e6, 100e18);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -345,7 +382,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80.4e18
@@ -355,7 +392,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountIn = actions.withdrawAndSwap(address(this), 100e6, 100.5e18);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -392,6 +429,10 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(actions));
         assertEq(amountIn, expectedAmountIn);
     }
+
+}
+
+contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
 
     function test_redeemAndSwap_insufficientBalance_boundary() public {
         _deposit(address(this), 100e6);
@@ -446,7 +487,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18
@@ -458,7 +499,7 @@ contract PSMVariant1ActionsTest is Test {
 
         _assertZeroBalances(address(this));
         _assertBalances({
-            u:                   receiver,
+            user:                receiver,
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -472,7 +513,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80e18
@@ -482,7 +523,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountOut = actions.redeemAndSwap(address(this), 80e18, 100e6);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -497,7 +538,7 @@ contract PSMVariant1ActionsTest is Test {
         savingsToken.approve(address(actions), type(uint256).max);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 80.4e18
@@ -507,7 +548,7 @@ contract PSMVariant1ActionsTest is Test {
         uint256 amountOut = actions.redeemAndSwap(address(this), 80.4e18, 100e6);
 
         _assertBalances({
-            u:                   address(this),
+            user:                address(this),
             gemBalance:          100e6,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -548,31 +589,6 @@ contract PSMVariant1ActionsTest is Test {
         assertEq(gem.balanceOf(address(actions)),          0);
         assertLt(dai.balanceOf(address(actions)),          1e18);  // PSM swap may leave some dust
         assertEq(savingsToken.balanceOf(address(actions)), 0);
-    }
-
-    /******************************************************************************************************************/
-    /*** Helper functions                                                                                           ***/
-    /******************************************************************************************************************/
-
-    function _assertBalances(address u, uint256 gemBalance, uint256 daiBalance, uint256 savingsTokenBalance) internal view {
-        assertEq(gem.balanceOf(u),          gemBalance);
-        assertEq(dai.balanceOf(u),          daiBalance);
-        assertEq(savingsToken.balanceOf(u), savingsTokenBalance);
-    }
-
-    function _assertZeroBalances(address u) internal view {
-        _assertBalances({
-            u:                   u,
-            gemBalance:          0,
-            daiBalance:          0,
-            savingsTokenBalance: 0
-        });
-    }
-
-    function _deposit(address _receiver, uint256 amount) internal {
-        gem.mint(address(this), amount);
-        gem.approve(address(actions), amount);
-        actions.swapAndDeposit(_receiver, amount, 0);
     }
     
 }
