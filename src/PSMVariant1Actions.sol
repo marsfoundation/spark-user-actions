@@ -48,20 +48,21 @@ contract PSMVariant1Actions {
      * @notice Swap in the PSM and deposit in the `savingsToken`.
      * @dev    Please note that `minAmountOut` is measured in `dai` due to increasing value of the `savingsToken`.
      *         `minAmountOut` is used to protect in the case PSM fees change.
-     * @param amountIn     The amount of the `gem` to swap.
-     * @param minAmountOut The minimum amount of `dai` to receive.
+     * @param  amountIn     The amount of the `gem` to swap.
+     * @param  minAmountOut The minimum amount of `dai` to receive.
+     * @return amountOut    The amount of `dai` deposited into the `savingsToken`.
      */
     function swapAndDeposit(
         address receiver,
         uint256 amountIn,
         uint256 minAmountOut
-    ) external {
+    ) external returns (uint256 amountOut) {
         gem.transferFrom(msg.sender, address(this), amountIn);
         
         // There may be a balance in this contract, so we determine the difference
         uint256 balanceBefore = dai.balanceOf(address(this));
         psm.sellGem(address(this), amountIn);
-        uint256 amountOut = dai.balanceOf(address(this)) - balanceBefore;
+        amountOut = dai.balanceOf(address(this)) - balanceBefore;
         require(amountOut >= minAmountOut, "PSMVariant1Actions/amount-out-too-low");
 
         savingsToken.deposit(amountOut, receiver);
@@ -72,14 +73,15 @@ contract PSMVariant1Actions {
      *         Use this if you want an exact amount of `gem` tokens out. IE pay someone 10k exactly.
      * @dev    Please note that `maxAmountIn` is measured in `dai` due to increasing value of the `savingsToken`.
      *         `maxAmountIn` is used to protect in the case PSM fees change.
-     * @param amountOut   The amount of `gem` you want to receive.
-     * @param maxAmountIn The maximum amount of `dai` to pay for this swap.
+     * @param  amountOut   The amount of `gem` you want to receive.
+     * @param  maxAmountIn The maximum amount of `dai` to pay for this swap.
+     * @return amountIn    The amount of `dai` used for the swap.
      */
     function withdrawAndSwap(
         address receiver,
         uint256 amountOut,
         uint256 maxAmountIn
-    ) external {
+    ) external returns (uint256 amountIn) {
         // Calculate the exact amount of required dai based on the expected output
         // We are performing the calculation at https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol#L121
         uint256 amountOut18 = amountOut * GEM_CONVERSION_FACTOR;
@@ -88,7 +90,7 @@ contract PSMVariant1Actions {
         // There may be a balance in this contract, so we determine the difference
         uint256 balanceBefore = dai.balanceOf(address(this));
         psm.buyGem(receiver, amountOut);
-        uint256 amountIn = balanceBefore - dai.balanceOf(address(this));
+        amountIn = balanceBefore - dai.balanceOf(address(this));
         require(amountIn <= maxAmountIn, "PSMVariant1Actions/amount-in-too-high");
     }
     
@@ -96,20 +98,21 @@ contract PSMVariant1Actions {
      * @notice Redeem from the `savingsToken` and swap in the PSM.
      *         Use this if you want to withdraw everything.
      * @dev    Please note that this will leave any dust due to rounding error in this contract.
-     * @param shares       The amount of shares to redeem.
-     * @param minAmountOut The minimum amount of `gem` to receive.
+     * @param  shares       The amount of shares to redeem.
+     * @param  minAmountOut The minimum amount of `gem` to receive.
+     * @return amountOut    The amount of `gem` tokens received.
      */
     function redeemAndSwap(
         address receiver,
         uint256 shares,
         uint256 minAmountOut
-    ) external {
+    ) external returns (uint256 amountOut) {
         uint256 assets = savingsToken.redeem(shares, address(this), msg.sender);
 
         // Calculate the exact amount of gems we expect to receive given this amount of assets
         // We are reversing the calculation at https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol#L121
         // Note: Due to rounding, this may leave dai dust in the contract
-        uint256 amountOut = assets * 1e18 / (GEM_CONVERSION_FACTOR * (1e18 + psm.tout()));
+        amountOut = assets * 1e18 / (GEM_CONVERSION_FACTOR * (1e18 + psm.tout()));
         require(amountOut >= minAmountOut, "PSMVariant1Actions/amount-out-too-low");
         psm.buyGem(receiver, amountOut);
     }

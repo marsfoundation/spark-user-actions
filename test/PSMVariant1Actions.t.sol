@@ -132,7 +132,7 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(receiver));
         _assertZeroBalances(address(actions));
 
-        actions.swapAndDeposit(receiver, 100e6, 100e18);
+        uint256 amountOut = actions.swapAndDeposit(receiver, 100e6, 100e18);
 
         _assertZeroBalances(address(this));
         _assertBalances({
@@ -142,6 +142,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 80e18  // 100 dai / 1.25
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 100e18);
     }
 
     function test_swapAndDeposit_sameReceiver() public {
@@ -156,7 +157,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.swapAndDeposit(address(this), 100e6, 100e18);
+        uint256 amountOut = actions.swapAndDeposit(address(this), 100e6, 100e18);
 
         _assertBalances({
             u:                   address(this),
@@ -165,6 +166,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 80e18
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 100e18);
     }
 
     function test_swapAndDeposit_fee() public {
@@ -180,7 +182,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.swapAndDeposit(address(this), 100e6, 99.5e18);
+        uint256 amountOut = actions.swapAndDeposit(address(this), 100e6, 99.5e18);
 
         _assertBalances({
             u:                   address(this),
@@ -189,6 +191,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 79.6e18  // 99.5 dai / 1.25
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 99.5e18);
     }
 
     function testFuzz_swapAndDeposit(
@@ -214,7 +217,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.swapAndDeposit(address(this), amountIn, minAmountOut);
+        uint256 amountOut = actions.swapAndDeposit(address(this), amountIn, minAmountOut);
 
         _assertBalances({
             u:                   address(this),
@@ -223,6 +226,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: expectedAmountOut * 1e18 / 1.25e18
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, expectedAmountOut);
     }
 
     function test_withdrawAndSwap_insufficientBalance_boundary() public {
@@ -298,7 +302,7 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(receiver));
         _assertZeroBalances(address(actions));
 
-        actions.withdrawAndSwap(receiver, 100e6, 100e18);
+        uint256 amountIn = actions.withdrawAndSwap(receiver, 100e6, 100e18);
 
         _assertZeroBalances(address(this));
         _assertBalances({
@@ -308,6 +312,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountIn, 100e18);
     }
 
     function test_withdrawAndSwap_sameReceiver() public {
@@ -322,7 +327,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.withdrawAndSwap(address(this), 100e6, 100e18);
+        uint256 amountIn = actions.withdrawAndSwap(address(this), 100e6, 100e18);
 
         _assertBalances({
             u:                   address(this),
@@ -331,6 +336,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountIn, 100e18);
     }
 
     function test_withdrawAndSwap_fee() public {
@@ -346,7 +352,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.withdrawAndSwap(address(this), 100e6, 100.5e18);
+        uint256 amountIn = actions.withdrawAndSwap(address(this), 100e6, 100.5e18);
 
         _assertBalances({
             u:                   address(this),
@@ -355,6 +361,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountIn, 100.5e18);
     }
 
     function testFuzz_withdrawAndSwap(
@@ -377,12 +384,13 @@ contract PSMVariant1ActionsTest is Test {
         assertApproxEqAbs(savingsToken.balanceOf(address(this)), expectedAmountIn * 1e18 / 1.25e18, 1e12);
         _assertZeroBalances(address(actions));
 
-        actions.withdrawAndSwap(address(this), amountOut, maxAmountIn);
+        uint256 amountIn = actions.withdrawAndSwap(address(this), amountOut, maxAmountIn);
 
         assertEq(gem.balanceOf(address(this)),                   amountOut);
         assertEq(dai.balanceOf(address(this)),                   0);
         assertApproxEqAbs(savingsToken.balanceOf(address(this)), 0, 1e12);
         _assertZeroBalances(address(actions));
+        assertEq(amountIn, expectedAmountIn);
     }
 
     function test_redeemAndSwap_insufficientBalance_boundary() public {
@@ -446,7 +454,7 @@ contract PSMVariant1ActionsTest is Test {
         _assertZeroBalances(address(receiver));
         _assertZeroBalances(address(actions));
 
-        actions.redeemAndSwap(receiver, 80e18, 100e6);
+        uint256 amountOut = actions.redeemAndSwap(receiver, 80e18, 100e6);
 
         _assertZeroBalances(address(this));
         _assertBalances({
@@ -456,6 +464,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 100e6);
     }
 
     function test_redeemAndSwap_sameReceiver() public {
@@ -470,7 +479,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.redeemAndSwap(address(this), 80e18, 100e6);
+        uint256 amountOut = actions.redeemAndSwap(address(this), 80e18, 100e6);
 
         _assertBalances({
             u:                   address(this),
@@ -479,6 +488,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 100e6);
     }
 
     function test_redeemAndSwap_fee() public {
@@ -494,7 +504,7 @@ contract PSMVariant1ActionsTest is Test {
         });
         _assertZeroBalances(address(actions));
 
-        actions.redeemAndSwap(address(this), 80.4e18, 100e6);
+        uint256 amountOut = actions.redeemAndSwap(address(this), 80.4e18, 100e6);
 
         _assertBalances({
             u:                   address(this),
@@ -503,6 +513,7 @@ contract PSMVariant1ActionsTest is Test {
             savingsTokenBalance: 0
         });
         _assertZeroBalances(address(actions));
+        assertEq(amountOut, 100e6);
     }
 
     function testFuzz_redeemAndSwap(
@@ -526,7 +537,9 @@ contract PSMVariant1ActionsTest is Test {
         assertApproxEqAbs(savingsToken.balanceOf(address(this)), shares, 1e12);
         _assertZeroBalances(address(actions));
 
-        actions.redeemAndSwap(address(this), shares, minAmountOut);
+        uint256 amountOut = actions.redeemAndSwap(address(this), shares, minAmountOut);
+
+        assertEq(amountOut, expectedAmountOut);
 
         assertEq(gem.balanceOf(address(this)),                   expectedAmountOut);
         assertEq(dai.balanceOf(address(this)),                   0);
