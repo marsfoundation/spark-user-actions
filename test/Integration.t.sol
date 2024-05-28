@@ -95,72 +95,8 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
 
     function _getCurrentPotDaiAccumulated() internal returns (uint256 potDaiAccumulated) {
         uint256 snapshotId = vm.snapshot();
-
         potDaiAccumulated = (pot.drip() * pot.Pie()) - vat.dai(POT);
-
         vm.revertTo(snapshotId);
-
-    }
-
-    /**********************************************************************************************/
-    /*** State diff functions and modifiers                                                     ***/
-    /**********************************************************************************************/
-
-    modifier logStateDiff() {
-        // vm.startStateDiffRecording();
-
-        _;
-
-        // VmSafe.AccountAccess[] memory records = vm.stopAndReturnStateDiff();
-
-        // console.log("--- STATE DIFF ---");
-
-        // for (uint256 i = 0; i < records.length; i++) {
-        //     for (uint256 j; j < records[i].storageAccesses.length; j++) {
-        //         if (!records[i].storageAccesses[j].isWrite) continue;
-
-        //         if (
-        //             records[i].storageAccesses[j].newValue ==
-        //             records[i].storageAccesses[j].previousValue
-        //         ) continue;
-
-        //         _logStorageModification(records[i], j);
-        //     }
-        // }
-    }
-
-    function _logStorageModification(VmSafe.AccountAccess memory record, uint256 index)
-        internal view
-    {
-        console.log("");
-        console2.log("account:  %s", vm.getLabel(record.account));
-        console2.log("accessor: %s", vm.getLabel(record.accessor));
-        console2.log("slot:     %s", vm.toString(record.storageAccesses[index].slot));
-
-        _logAddressOrUint("oldValue:", record.storageAccesses[index].previousValue);
-        _logAddressOrUint("newValue:", record.storageAccesses[index].newValue);
-    }
-
-    function _logAddressOrUint(string memory key, bytes32 _bytes) internal view {
-        if (isAddress(_bytes)) {
-            console.log(key, vm.toString(bytes32ToAddress(_bytes)));
-        } else {
-            console.log(key, vm.toString(uint256(_bytes)));
-        }
-    }
-
-    function isAddress(bytes32 _bytes) public pure returns (bool) {
-        if (_bytes == 0) return false;
-
-        address extractedAddress = address(uint160(uint256(_bytes)));
-
-        // Check if the address equals the original bytes32 value when padded back to bytes32
-        return extractedAddress != address(0) && bytes32(bytes20(extractedAddress)) == _bytes;
-    }
-
-    function bytes32ToAddress(bytes32 _bytes) public pure returns (address) {
-        require(isAddress(_bytes), "bytes32ToAddress/invalid-address");
-        return address(uint160(uint256(_bytes)));
     }
 
 }
