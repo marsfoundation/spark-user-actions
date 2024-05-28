@@ -207,7 +207,7 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
         assertEq(daiSupplyUpdated, 3_276_005_671.384947469248718868e18);
     }
 
-    function test_withdrawAndSwap_sameReceiver() public {
+    function _runWithdrawAndSwapTest(address receiver) internal {
         uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
 
         assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);  // Amount of shares minted in sDai
@@ -247,12 +247,12 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
         // Using a diff approach in this test because of accrued value to totalAssets
         uint256 totalAssets = sdai.totalAssets();
 
-        uint256 amountIn = actions.withdrawAndSwap(address(this), 1_000_000e6, 1_000_000e18);
+        uint256 amountIn = actions.withdrawAndSwap(receiver, 1_000_000e6, 1_000_000e18);
 
         assertEq(amountIn, 1_000_000e18);
 
-        assertEq(usdc.balanceOf(address(this)), 1_000_000e6);
-        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN - 1_000_000e6);
+        assertEq(usdc.balanceOf(receiver), 1_000_000e6);
+        assertEq(usdc.balanceOf(PSM_JOIN), USDC_BAL_PSM_JOIN - 1_000_000e6);
 
         // 1e-18 dust amount from converting to shares then back to dai in pot.exit call
         uint256 sDaiDustAmount2 = 0.000000000000000001026428135379172868996806790e45;
@@ -276,6 +276,14 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
 
         assertEq(sdai.balanceOf(address(this)), expectedRemainingBalance);
         assertEq(sdai.totalAssets(),            totalAssets - 1_000_000e18 - 1);  // Rounding
+    }
+
+    function test_withdrawAndSwap_sameReceiver() public {
+        _runWithdrawAndSwapTest(address(this));
+    }
+
+    function test_withdrawAndSwap_differentReceiver() public {
+        _runWithdrawAndSwapTest(makeAddr("receiver"));
     }
 
 }
