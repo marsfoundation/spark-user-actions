@@ -96,7 +96,7 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
     function _getCurrentPotDaiAccumulated() internal returns (uint256 potDaiAccumulated) {
         uint256 snapshotId = vm.snapshot();
 
-        potDaiAccumulated = (pot.drip() * pot.Pie()) - VAT_DAI_POT;
+        potDaiAccumulated = (pot.drip() * pot.Pie()) - vat.dai(POT);
 
         vm.revertTo(snapshotId);
 
@@ -252,72 +252,70 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
 
 }
 
-// contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1ActionsIntegrationTestsBase {
+contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1ActionsIntegrationTestsBase {
 
-//     uint256 constant override VAT_DAI_POT       = 1_920_648_463.946930438663372526251818820658316413154467601e45;
+    // Values updated from constants
+    uint256 vatDaiPotUpdated;
+    uint256 daiSupplyUpdated;
 
-//     function setUp() public override {
-//         super.setUp();
+    function setUp() public override {
+        super.setUp();
 
-//         deal(DAI, address(this), 1_000_000e18);
-//         dai.approve(address(SDAI), 1_000_000e18);
-//         sdai.deposit(1_000_000e18, address(this));  // Pot drip happens here
-//     }
+        deal(DAI, address(this), 1_000_000e18);
+        dai.approve(address(SDAI), 1_000_000e18);
+        sdai.deposit(1_000_000e18, address(this));  // Pot drip happens here
 
-//     function test_withdrawAndSwap_sameReceiver() public {
-//         uint256 potDaiAccumulated = _getCurrentPotDaiAccumulated();
+        vatDaiPotUpdated = vat.dai(POT);
+        daiSupplyUpdated = dai.totalSupply();
 
-//         assertEq(potDaiAccumulated, 3_318.530728803752113169892229145877765319795805405e45);
+        assertEq(vatDaiPotUpdated, 1_921_651_782.477659242415485695316196197394264396850754476e45);
+        assertEq(daiSupplyUpdated, 3_276_005_671.384947469248718868e18);
+    }
 
-//         deal(USDC, address(this), 1_000_000e6);
+    function test_sii() public {
+        uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
 
-//         usdc.approve(address(actions), 1_000_000e6);
+        assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);  // Amount of shares minted in sDai
 
-//         assertEq(usdc.allowance(address(this), address(actions)), 1_000_000e6);
+        // Simulate non-atomic withdrawAndSwap after deposit
+        // Doing after previewDeposit because that changes over time
+        skip(10 minutes);
 
-//         assertEq(usdc.balanceOf(address(this)), 1_000_000e6);
-//         assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN);
+        // Accumulated in 10min since deposit
+        uint256 potDaiAccumulated = _getCurrentPotDaiAccumulated();
 
-//         assertEq(vat.dai(VOW),  VAT_DAI_VOW);
-//         assertEq(vat.dai(POT),  VAT_DAI_POT);
-//         assertEq(vat.dai(SDAI), VAT_DAI_SDAI);
+        assertEq(potDaiAccumulated, 2_813.782917739392486833695985337516761927773654622e45);
 
-//         assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM
-//         assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM
-//         assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
+        sdai.approve(address(actions), 1_000_000e18);
 
-//         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);
+        assertEq(usdc.balanceOf(address(this)), 0);
+        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN);
 
-//         assertEq(sdai.balanceOf(address(this)), 0);
-//         assertEq(sdai.totalAssets(),            SDAI_TOTAL_ASSETS);
+        // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
+        // Same as in swapAndDeposit because its the same amount of DAI
+        uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
 
-//         uint256 amountDeposited = actions.swapAndDeposit(address(this), 1_000_000e6, 1_000_000e18);
+        assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
+        assertEq(vat.dai(POT),  vatDaiPotUpdated);
+        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
 
-//         assertEq(amountDeposited, 1_000_000e18);
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
 
-//         assertEq(usdc.allowance(address(this), address(actions)), 0);
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedSDaiBalance);  // Shares increase in pot same as sDai shares increase
 
-//         assertEq(usdc.balanceOf(address(this)), 0);
-//         assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN + 1_000_000e6);
+        assertEq(dai.totalSupply(), daiSupplyUpdated);
 
-//         // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
-//         uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
+        assertEq(sdai.balanceOf(address(this)), expectedSDaiBalance);
 
-//         assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
-//         assertEq(vat.dai(POT),  VAT_DAI_POT + potDaiAccumulated + 1_000_000e45 - sDaiDustAmount);
-//         assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
+        // Using a diff approach in this test because of accrued value to totalAssets
+        uint256 totalAssets = sdai.totalAssets();
 
-//         assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART + 1_000_000e18);  // Ink should equal art for PSM
-//         assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART + 1_000_000e18);  // Ink should equal art for PSM
-//         assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART + 1_000_000e18);
+        uint256 amountIn = actions.withdrawAndSwap(address(this), 1_000_000e6, 1_000_000e18);
 
-//         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);  // No net change in ERC20 supply
+        assertEq(amountIn, 1_000_000e18);
 
-//         uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
 
-//         assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);
-
-//         assertEq(sdai.balanceOf(address(this)), expectedSDaiBalance);
-//         assertEq(sdai.totalAssets(),            SDAI_TOTAL_ASSETS + 1_000_000e18 - 1);  // Rounding
-//     }
-// }
+    }
+}
