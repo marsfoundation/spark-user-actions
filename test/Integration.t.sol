@@ -167,6 +167,7 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
 
 contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1ActionsIntegrationTestsBase {
 
+    // TODO: Remove
     function test_logBalances() public {
         console.log("usdc.balanceOf(PSM_JOIN): %s", usdc.balanceOf(PSM_JOIN));
         console.log("vat.dai(PSM_JOIN))        %s", vat.dai(PSM_JOIN));
@@ -199,8 +200,8 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         assertEq(vat.dai(POT),  VAT_DAI_POT);
         assertEq(vat.dai(SDAI), VAT_DAI_SDAI);
 
-        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM
-        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
         assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
 
         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);
@@ -224,8 +225,8 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         assertEq(vat.dai(POT),  VAT_DAI_POT + potDaiAccumulated + 1_000_000e45 - sDaiDustAmount);
         assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
 
-        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART + amount18);  // Ink should equal art for PSM
-        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART + amount18);  // Ink should equal art for PSM
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART + amount18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART + amount18);  // Ink should equal art for PSM in this scenario
         assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART + amount18);
 
         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);  // No net change in ERC20 supply
