@@ -272,7 +272,7 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
         assertEq(daiSupplyUpdated, 3_276_005_671.384947469248718868e18);
     }
 
-    function test_sii() public {
+    function test_withdrawAndSwap_sameReceiver() public {
         uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
 
         assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);  // Amount of shares minted in sDai
@@ -315,6 +315,27 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
         uint256 amountIn = actions.withdrawAndSwap(address(this), 1_000_000e6, 1_000_000e18);
 
         assertEq(amountIn, 1_000_000e18);
+
+        assertEq(usdc.balanceOf(address(this)), 1_000_000e6);
+        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN - 1_000_000e6);
+
+        // // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
+        // // Same as in swapAndDeposit because its the same amount of DAI
+        // uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
+
+        // assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
+        // assertEq(vat.dai(POT),  vatDaiPotUpdated);
+        // assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
+
+        // assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        // assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        // assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
+
+        // assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedSDaiBalance);  // Shares increase in pot same as sDai shares increase
+
+        // assertEq(dai.totalSupply(), daiSupplyUpdated);
+
+        // assertEq(sdai.balanceOf(address(this)), expectedSDaiBalance);
 
 
     }
