@@ -97,7 +97,7 @@ contract PSMVariant1Actions {
     /**
      * @notice Redeem a specified amount of `savingsToken` from the `savingsToken` for `dai` and swap for `gem` in the PSM.
      *         Use this if you want to withdraw everything.
-     * @dev    Please note that this will leave any dust due to rounding error in this contract.
+     * @dev    Please note that this will leave dust due to rounding error in this contract.
      * @param  shares       The amount of shares to redeem.
      * @param  minAmountOut The minimum amount of `gem` to receive.
      * @return amountOut    The amount of `gem` tokens received.

@@ -21,7 +21,7 @@ contract PSMVariant1ActionsBase is Test {
 
     ERC4626Mock     savingsToken;
     PSMVariant1Mock psm;
-    
+
     PSMVariant1Actions actions;
 
     address receiver = makeAddr("receiver");
@@ -55,9 +55,9 @@ contract PSMVariant1ActionsBase is Test {
         assertEq(savingsToken.balanceOf(user), savingsTokenBalance);
     }
 
-    function _assertZeroBalances(address u) internal view {
+    function _assertZeroBalances(address user) internal view {
         _assertBalances({
-            user:                u,
+            user:                user,
             gemBalance:          0,
             daiBalance:          0,
             savingsTokenBalance: 0
@@ -570,7 +570,7 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
         minAmountOut = bound(minAmountOut, 0, expectedAmountOut);
 
         psm.__setTout(fee);
-        savingsToken.approve(address(actions), shares + 1e12);  // Approve some extra for rounding
+        savingsToken.approve(address(actions), shares);
         _deposit(address(this), assets / 1e12 + 1);  // Add one extra to deal with shares rounding
 
         assertEq(gem.balanceOf(address(this)),                   0);
@@ -587,8 +587,8 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
         assertApproxEqAbs(savingsToken.balanceOf(address(this)), 0, 1e12);
 
         assertEq(gem.balanceOf(address(actions)),          0);
-        assertLt(dai.balanceOf(address(actions)),          1e18);  // PSM swap may leave some dust
+        assertLt(dai.balanceOf(address(actions)),          2e12);  // PSM swap may leave some dust
         assertEq(savingsToken.balanceOf(address(actions)), 0);
     }
-    
+
 }
