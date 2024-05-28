@@ -180,20 +180,18 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         console.log("dai.totalSupply()         %s", dai.totalSupply());
     }
 
-    function _runSwapAndDepositTest(uint256 amount, address receiver) internal {
-        uint256 amount18 = amount * 1e12;
-
+    function _runSwapAndDepositTest(address receiver) internal {
         uint256 potDaiAccumulated = _getCurrentPotDaiAccumulated();
 
         assertEq(potDaiAccumulated, 3_318.530728803752113169892229145877765319795805405e45);
 
-        deal(USDC, address(this), amount);
+        deal(USDC, address(this), 1_000_000e6);
 
-        usdc.approve(address(actions), amount);
+        usdc.approve(address(actions), 1_000_000e6);
 
-        assertEq(usdc.allowance(address(this), address(actions)), amount);
+        assertEq(usdc.allowance(address(this), address(actions)), 1_000_000e6);
 
-        assertEq(usdc.balanceOf(address(this)), amount);
+        assertEq(usdc.balanceOf(address(this)), 1_000_000e6);
         assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN);
 
         assertEq(vat.dai(VOW),  VAT_DAI_VOW);
@@ -204,19 +202,21 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
         assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
 
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI);
+
         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);
 
         assertEq(sdai.balanceOf(address(this)), 0);
         assertEq(sdai.totalAssets(),            SDAI_TOTAL_ASSETS);
 
-        uint256 amountDeposited = actions.swapAndDeposit(receiver, amount, amount18);
+        uint256 amountDeposited = actions.swapAndDeposit(receiver, 1_000_000e6, 1_000_000e18);
 
-        assertEq(amountDeposited, amount18);
+        assertEq(amountDeposited, 1_000_000e18);
 
         assertEq(usdc.allowance(address(this), address(actions)), 0);
 
         assertEq(usdc.balanceOf(address(this)), 0);
-        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN + amount);
+        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN + 1_000_000e6);
 
         // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
         uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
@@ -225,34 +225,30 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         assertEq(vat.dai(POT),  VAT_DAI_POT + potDaiAccumulated + 1_000_000e45 - sDaiDustAmount);
         assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
 
-        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART + amount18);  // Ink should equal art for PSM in this scenario
-        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART + amount18);  // Ink should equal art for PSM in this scenario
-        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART + amount18);
-
-        assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);  // No net change in ERC20 supply
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART + 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART + 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART + 1_000_000e18);
 
         uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
 
-        assertEq(sdai.previewDeposit(amount18), expectedSDaiBalance);
+        assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);  // Amount of shares minted in sDai
+
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedSDaiBalance);  // Shares increase in pot same as sDai shares increase
+
+        assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);  // No net change in ERC20 supply
 
         assertEq(sdai.balanceOf(receiver), expectedSDaiBalance);
 
-        assertApproxEqAbs(sdai.totalAssets(), SDAI_TOTAL_ASSETS + amount18, 1);  // Rounding
+        assertApproxEqAbs(sdai.totalAssets(), SDAI_TOTAL_ASSETS + 1_000_000e18, 1);  // Rounding
     }
 
     function test_swapAndDeposit_sameReceiver() public {
-        _runSwapAndDepositTest(1_000_000e6, address(this));
+        _runSwapAndDepositTest(address(this));
     }
 
     function test_swapAndDeposit_differentReceiver() public {
-        _runSwapAndDepositTest(1_000_000e6, makeAddr("receiver"));
+        _runSwapAndDepositTest(makeAddr("receiver"));
     }
-
-    // TODO: Figure out issue here
-    // function testFuzz_swapAndDeposit_sameReceiver(uint256 amount) public {
-    //     // 1 trillion max
-    //     _runSwapAndDepositTest(_bound(amount, 0, 1e12 * 1e6), address(this));
-    // }
 
 }
 
