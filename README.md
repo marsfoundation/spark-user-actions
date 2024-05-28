@@ -1,4 +1,4 @@
-# <TITLE>
+# Spark User Actions
 
 <!-- ![Foundry CI](https://github.com/{org}/{repo}/actions/workflows/ci.yml/badge.svg)
 [![Foundry][foundry-badge]][foundry]
@@ -7,7 +7,17 @@
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 
-Description of project goes here.
+Common user actions for the Spark App.
+
+## Actions Available
+
+### PSMVariant1Actions
+
+Used for swapping via a PSM and depositing in an ERC4626 token contract. Supported actions:
+
+ * Deposit
+ * Withdraw (when exact output is required)
+ * Redeem (to redeem all savings tokens)
 
 ## Usage
 
