@@ -238,8 +238,7 @@ contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1Actions
         assertEq(dai.totalSupply(), DAI_TOTAL_SUPPLY);  // No net change in ERC20 supply
 
         assertEq(sdai.balanceOf(receiver), expectedSDaiBalance);
-
-        assertApproxEqAbs(sdai.totalAssets(), SDAI_TOTAL_ASSETS + 1_000_000e18, 1);  // Rounding
+        assertEq(sdai.totalAssets(),       SDAI_TOTAL_ASSETS + 1_000_000e18 - 1);  // Rounding
     }
 
     function test_swapAndDeposit_sameReceiver() public {
@@ -293,11 +292,11 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
 
         // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
         // Same as in swapAndDeposit because its the same amount of DAI
-        uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
+        uint256 sDaiDustAmount1 = 0.000000000000000000827851769141817336099518530e45;
 
         assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
-        assertEq(vat.dai(POT),  vatDaiPotUpdated);
-        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
+        assertEq(vat.dai(POT),  vatDaiPotUpdated);  // Updated pot value includes dust amount
+        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount1);
 
         assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
         assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
@@ -319,24 +318,28 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
         assertEq(usdc.balanceOf(address(this)), 1_000_000e6);
         assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN - 1_000_000e6);
 
-        // // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
-        // // Same as in swapAndDeposit because its the same amount of DAI
-        // uint256 sDaiDustAmount = 0.000000000000000000827851769141817336099518530e45;
+        // 1e-18 dust amount from converting to shares then back to dai in pot.exit call
+        uint256 sDaiDustAmount2 = 0.000000000000000001026428135379172868996806790e45;
 
-        // assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
-        // assertEq(vat.dai(POT),  vatDaiPotUpdated);
-        // assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount);
+        assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
+        assertEq(vat.dai(POT),  vatDaiPotUpdated + potDaiAccumulated - 1_000_000e45 - sDaiDustAmount2);  // Updated pot value includes dust amount
+        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount1 + sDaiDustAmount2);
 
-        // assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
-        // assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
-        // assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART - 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART - 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART - 1_000_000e18);
 
-        // assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedSDaiBalance);  // Shares increase in pot same as sDai shares increase
+        uint256 expectedRemainingBalance = 1.349372009568968235e18;
 
-        // assertEq(dai.totalSupply(), daiSupplyUpdated);
+        assertEq(expectedSDaiBalance - sdai.previewWithdraw(1_000_000e18), expectedRemainingBalance);
 
-        // assertEq(sdai.balanceOf(address(this)), expectedSDaiBalance);
+        // Shares increase from before deposit but have decreased since withdraw
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedRemainingBalance);
 
+        assertEq(dai.totalSupply(), daiSupplyUpdated);  // No net change in ERC20 supply
 
+        assertEq(sdai.balanceOf(address(this)), expectedRemainingBalance);
+        assertEq(sdai.totalAssets(),            totalAssets - 1_000_000e18 - 1);  // Rounding
     }
+
 }
