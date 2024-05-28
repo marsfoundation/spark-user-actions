@@ -43,7 +43,7 @@ contract PSMVariant1Actions {
         dai.approve(address(psm),           type(uint256).max);  // For psm.buyGem()
         dai.approve(address(savingsToken),  type(uint256).max);  // For savingsToken.deposit()
     }
-    
+
     /**
      * @notice Swap `gem` for `dai` in the PSM and deposit in the `savingsToken`.
      * @dev    Please note that `minAmountOut` is measured in `dai` due to increasing value of the `savingsToken`.
@@ -58,7 +58,7 @@ contract PSMVariant1Actions {
         uint256 minAmountOut
     ) external returns (uint256 amountOut) {
         gem.transferFrom(msg.sender, address(this), amountIn);
-        
+
         // There may be a balance in this contract, so we determine the difference
         uint256 balanceBefore = dai.balanceOf(address(this));
         psm.sellGem(address(this), amountIn);
@@ -67,7 +67,7 @@ contract PSMVariant1Actions {
 
         savingsToken.deposit(amountOut, receiver);
     }
-    
+
     /**
      * @notice Withdraw a specified amount of `dai` from the `savingsToken` and swap for `gem` in the PSM.
      *         Use this if you want an exact amount of `gem` tokens out. IE pay someone 10k exactly.
@@ -86,14 +86,14 @@ contract PSMVariant1Actions {
         // We are performing the calculation at https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol#L121
         uint256 amountOut18 = amountOut * GEM_CONVERSION_FACTOR;
         savingsToken.withdraw(amountOut18 + amountOut18 * psm.tout() / 1e18, address(this), msg.sender);
-        
+
         // There may be a balance in this contract, so we determine the difference
         uint256 balanceBefore = dai.balanceOf(address(this));
         psm.buyGem(receiver, amountOut);
         amountIn = balanceBefore - dai.balanceOf(address(this));
         require(amountIn <= maxAmountIn, "PSMVariant1Actions/amount-in-too-high");
     }
-    
+
     /**
      * @notice Redeem a specified amount of `savingsToken` from the `savingsToken` for `dai` and swap for `gem` in the PSM.
      *         Use this if you want to withdraw everything.
