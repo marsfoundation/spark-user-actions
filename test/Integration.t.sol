@@ -78,19 +78,16 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
 
         actions = new PSMVariant1Actions(PSM, SDAI);
 
-        vm.label(POT, "POT");
-        vm.label(PSM, "PSM");
-        vm.label(DAI_JOIN, "DAI_JOIN");
-        vm.label(PSM_JOIN, "PSM_JOIN");
-        vm.label(VAT, "VAT");
-        vm.label(DAI, "DAI");
-        vm.label(SDAI, "SDAI");
-        vm.label(USDC, "USDC");
+        vm.label(POT,              "POT");
+        vm.label(PSM,              "PSM");
+        vm.label(DAI_JOIN,         "DAI_JOIN");
+        vm.label(PSM_JOIN,         "PSM_JOIN");
+        vm.label(VAT,              "VAT");
+        vm.label(DAI,              "DAI");
+        vm.label(SDAI,             "SDAI");
+        vm.label(USDC,             "USDC");
         vm.label(address(actions), "ACTIONS");
-        vm.label(address(this), "THIS");
-
-        // Added because of log state using implementation instead of proxy
-        vm.label(0x43506849D7C04F9138D1A2050bbF3A0c054402dd, "USDC_IMPL");
+        vm.label(address(this),    "THIS");
     }
 
     function _getCurrentPotDaiAccumulated() internal returns (uint256 potDaiAccumulated) {
