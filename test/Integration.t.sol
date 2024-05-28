@@ -103,19 +103,6 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
 
 contract PSMVariant1Actions_SwapAndDepositIntegrationTests is PSMVariant1ActionsIntegrationTestsBase {
 
-    // TODO: Remove
-    function test_logBalances() public {
-        console.log("usdc.balanceOf(PSM_JOIN): %s", usdc.balanceOf(PSM_JOIN));
-        console.log("vat.dai(PSM_JOIN))        %s", vat.dai(PSM_JOIN));
-        console.log("vat.dai(PSM))             %s", vat.dai(PSM));
-        console.log("vat.dai(SDAI))            %s", vat.dai(SDAI));
-        console.log("usdc.balanceOf(SDAI)      %s", usdc.balanceOf(SDAI));
-        console.log("dai.balanceOf(SDAI)       %s", dai.balanceOf(SDAI));
-        console.log("pot.pie(SDAI)             %s", pot.pie(SDAI));
-        console.log("vat.dai(POT)              %s", vat.dai(POT));
-        console.log("dai.totalSupply()         %s", dai.totalSupply());
-    }
-
     function _runSwapAndDepositTest(address receiver) internal {
         uint256 potDaiAccumulated = _getCurrentPotDaiAccumulated();
 
@@ -284,6 +271,110 @@ contract PSMVariant1Actions_WithdrawAndSwapIntegrationTests is PSMVariant1Action
 
     function test_withdrawAndSwap_differentReceiver() public {
         _runWithdrawAndSwapTest(makeAddr("receiver"));
+    }
+
+}
+
+contract PSMVariant1Actions_RedeemAndSwapIntegrationTests is PSMVariant1ActionsIntegrationTestsBase {
+
+    // Values updated from constants
+    uint256 vatDaiPotUpdated;
+    uint256 daiSupplyUpdated;
+
+    function setUp() public override {
+        super.setUp();
+
+        deal(DAI, address(this), 1_000_000e18);
+        dai.approve(address(SDAI), 1_000_000e18);
+        sdai.deposit(1_000_000e18, address(this));  // Pot drip happens here
+
+        vatDaiPotUpdated = vat.dai(POT);
+        daiSupplyUpdated = dai.totalSupply();
+
+        assertEq(vatDaiPotUpdated, 1_921_651_782.477659242415485695316196197394264396850754476e45);
+        assertEq(daiSupplyUpdated, 3_276_005_671.384947469248718868e18);
+    }
+
+    function _runRedeemAndSwapTest(address receiver) internal {
+        uint256 expectedSDaiBalance = 921_544.767332950511118705e18;
+
+        assertEq(sdai.previewDeposit(1_000_000e18), expectedSDaiBalance);  // Amount of shares minted in sDai
+
+        // Simulate non-atomic redeemAndSwap after deposit
+        // Doing after previewDeposit because that changes over time
+        skip(10 minutes);
+
+        // Accumulated in 10min since deposit
+        uint256 potDaiAccumulated = _getCurrentPotDaiAccumulated();
+
+        assertEq(potDaiAccumulated, 2_813.782917739392486833695985337516761927773654622e45);
+
+        sdai.approve(address(actions), 1_000_000e18);
+
+        assertEq(usdc.balanceOf(address(this)), 0);
+        assertEq(usdc.balanceOf(PSM_JOIN),      USDC_BAL_PSM_JOIN);
+
+        // 8.2e-19 dust amount from converting to shares then back to dai in pot.join call
+        // Same as in swapAndDeposit because its the same amount of DAI
+        uint256 sDaiDustAmount1 = 0.000000000000000000827851769141817336099518530e45;
+
+        assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
+        assertEq(vat.dai(POT),  vatDaiPotUpdated);  // Updated pot value includes dust amount
+        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount1);
+
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART);
+
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedSDaiBalance);  // Shares increase in pot same as sDai shares increase
+
+        assertEq(dai.totalSupply(), daiSupplyUpdated);
+
+        assertEq(sdai.balanceOf(address(this)), expectedSDaiBalance);
+
+        // Using a diff approach in this test because of accrued value to totalAssets
+        uint256 totalAssets = sdai.totalAssets();
+
+        // Calculate shares to burn to get clean numbers for assertions
+        uint256 sharesToBurn = sdai.previewWithdraw(1_000_000e18);
+
+        uint256 amountOut = actions.redeemAndSwap(receiver, sharesToBurn, 1_000_000e6);
+
+        assertEq(amountOut, 1_000_000e6);
+
+        assertEq(usdc.balanceOf(receiver), 1_000_000e6);
+        assertEq(usdc.balanceOf(PSM_JOIN), USDC_BAL_PSM_JOIN - 1_000_000e6);
+
+        // 1e-18 dust amount from converting to shares then back to dai in pot.exit call
+        uint256 sDaiDustAmount2 = 0.000000000000000001026428135379172868996806790e45;
+
+        assertEq(vat.dai(VOW),  VAT_DAI_VOW);  // No fees
+        assertEq(vat.dai(POT),  vatDaiPotUpdated + potDaiAccumulated - 1_000_000e45 - sDaiDustAmount2);  // Updated pot value includes dust amount
+        assertEq(vat.dai(SDAI), VAT_DAI_SDAI + sDaiDustAmount1 + sDaiDustAmount2 - 1e27);  // Exactly 1e-18 rad dust removed, goes into erc20 totalSupply
+
+        assertEq(vat.urns(ILK, PSM).ink, VAT_ILK_ART - 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.urns(ILK, PSM).art, VAT_ILK_ART - 1_000_000e18);  // Ink should equal art for PSM in this scenario
+        assertEq(vat.ilks(ILK).Art,      VAT_ILK_ART - 1_000_000e18);
+
+        uint256 expectedRemainingBalance = 1.349372009568968235e18;
+
+        assertEq(expectedSDaiBalance - sdai.previewWithdraw(1_000_000e18), expectedRemainingBalance);
+
+        // Shares increase from before deposit but have decreased since withdraw
+        assertEq(pot.pie(SDAI), POT_PIE_SDAI + expectedRemainingBalance);
+
+        assertEq(dai.totalSupply(), daiSupplyUpdated + 1);  // 1e-18 rad dust removed from vat internal accounting moved to totalSupply
+
+        assertEq(sdai.balanceOf(address(this)), expectedRemainingBalance);
+        assertEq(sdai.totalAssets(),            totalAssets - 1_000_000e18 - 1);
+    }
+
+    function test_redeemAndSwap_sameReceiver() public {
+        _runRedeemAndSwapTest(address(this));
+    }
+
+    function test_redeemAndSwap_differentReceiver() public {
+        _runRedeemAndSwapTest(makeAddr("receiver"));
     }
 
 }
