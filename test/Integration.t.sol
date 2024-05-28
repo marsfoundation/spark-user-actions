@@ -3,17 +3,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import { IERC20 }   from "forge-std/interfaces/IERC20.sol";
+import { IERC4626 } from "forge-std/interfaces/IERC4626.sol";
+
 import { VmSafe } from "forge-std/Vm.sol";
 
-import { IERC20 } from "lib/erc20-helpers/src/interfaces/IERC20.sol";
-
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
-
-interface IERC4626Like is IERC20 {
-    function deposit(uint256, address) external returns (uint256);
-    function previewDeposit(uint256) external view returns (uint256);
-    function totalAssets() external view returns (uint256);
-}
 
 interface PotLike {
     function drip() external returns (uint256);
@@ -71,7 +66,7 @@ contract PSMVariant1ActionsIntegrationTestsBase is Test {
     IERC20 constant dai  = IERC20(DAI);
     IERC20 constant usdc = IERC20(USDC);
 
-    IERC4626Like constant sdai = IERC4626Like(SDAI);
+    IERC4626 constant sdai = IERC4626(SDAI);
 
     PotLike constant pot = PotLike(POT);
     VatLike constant vat = VatLike(VAT);
