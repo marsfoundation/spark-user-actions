@@ -21,7 +21,7 @@ contract PSMVariant1ActionsBase is Test {
 
     ERC4626Mock     savingsToken;
     PSMVariant1Mock psm;
-    
+
     PSMVariant1Actions actions;
 
     address receiver = makeAddr("receiver");
@@ -590,5 +590,5 @@ contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
         assertLt(dai.balanceOf(address(actions)),          2e12);  // PSM swap may leave some dust
         assertEq(savingsToken.balanceOf(address(actions)), 0);
     }
-    
+
 }
