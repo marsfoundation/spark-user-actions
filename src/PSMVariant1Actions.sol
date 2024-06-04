@@ -48,6 +48,7 @@ contract PSMVariant1Actions {
      * @notice Swap `gem` for `dai` in the PSM and deposit in the `savingsToken`.
      * @dev    Please note that `minAmountOut` is measured in `dai` due to increasing value of the `savingsToken`.
      *         `minAmountOut` is used to protect in the case PSM fees change.
+     * @param  receiver     The receiver of the `savingsToken`.
      * @param  amountIn     The amount of the `gem` to swap.
      * @param  minAmountOut The minimum amount of `dai` to receive.
      * @return amountOut    The amount of `dai` deposited into the `savingsToken`.
@@ -73,6 +74,7 @@ contract PSMVariant1Actions {
      *         Use this if you want an exact amount of `gem` tokens out. IE pay someone 10k exactly.
      * @dev    Please note that `maxAmountIn` is measured in `dai` due to increasing value of the `savingsToken`.
      *         `maxAmountIn` is used to protect in the case PSM fees change.
+     * @param  receiver    The receiver of the `gem`.
      * @param  amountOut   The amount of `gem` you want to receive.
      * @param  maxAmountIn The maximum amount of `dai` to pay for this swap.
      * @return amountIn    The amount of `dai` used for the swap.
@@ -98,6 +100,7 @@ contract PSMVariant1Actions {
      * @notice Redeem a specified amount of `savingsToken` from the `savingsToken` for `dai` and swap for `gem` in the PSM.
      *         Use this if you want to withdraw everything.
      * @dev    Please note that this will leave dust due to rounding error in this contract.
+     * @param  receiver     The receiver of the `gem`.
      * @param  shares       The amount of shares to redeem.
      * @param  minAmountOut The minimum amount of `gem` to receive.
      * @return amountOut    The amount of `gem` tokens received.
