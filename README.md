@@ -19,33 +19,33 @@ These contracts will be deployed at well-known addresses to be used across the M
 
 ### Ethereum (pre-NST launch)
 
- * DAI <-> sDAI: sDAI ERC-4626 interface
- * USDC <-> DAI: Use PSM directly
- * USDC <-> sDAI: PSMVariantXActions (1 and 2 depending on version of PSM active)
+DAI <-> sDAI: sDAI ERC-4626 interface  
+USDC <-> DAI: Use PSM directly  
+USDC <-> sDAI: PSMVariantXActions (1 and 2 depending on version of PSM active)  
 
 ### Ethereum (post-NST launch)
 
- * NST <-> sNST: PullUp provides this?
- * USDC <-> NST: Will PSM be upgraded? If so, use PSM directly.
- * USDC <-> sNST: PSMVariant2Actions
-
- * NST <-> NGT Farm: Directly deposit
- * USDC <-> NGT Farm: PSMVariant2Actions
- * NST <-> SPK Farm: Directly deposit
- * USDC <-> SPK Farm: PSMVariant2Actions
+NST <-> sNST: PullUp provides this?  
+USDC <-> NST: Will PSM be upgraded? If so, use PSM directly.  
+USDC <-> sNST: PSMVariant2Actions  
+  
+NST <-> NGT Farm: Directly deposit  
+USDC <-> NGT Farm: PSMVariant2Actions  
+NST <-> SPK Farm: Directly deposit  
+USDC <-> SPK Farm: PSMVariant2Actions  
 
 ### Non-Ethereum chains
 
 A three-way PSM will be provided here: https://github.com/marsfoundation/spark-psm. This can be used directly by UIs.
 
- * NST <-> sNST: Swap in PSM
- * USDC <-> NST: Swap in PSM
- * USDC <-> sNST: PSMVariant3Actions (to deal with dust)
-
- * NST <-> NGT Farm: Directly deposit
- * USDC <-> NGT Farm: PSMVariant3Actions
- * NST <-> SPK Farm: Directly deposit
- * USDC <-> SPK Farm: PSMVariant3Actions
+NST <-> sNST: Swap in PSM  
+USDC <-> NST: Swap in PSM  
+USDC <-> sNST: PSMVariant3Actions (to deal with dust)  
+  
+NST <-> NGT Farm: Directly deposit  
+USDC <-> NGT Farm: PSMVariant3Actions  
+NST <-> SPK Farm: Directly deposit  
+USDC <-> SPK Farm: PSMVariant3Actions  
 
 ## PSMVariant1Actions
 
