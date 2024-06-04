@@ -19,43 +19,41 @@ These contracts will be deployed at well-known addresses to be used across the M
 
 ### Ethereum (pre-NST launch)
 
-DAI <-> sDAI: sDAI ERC-4626 interface
-USDC <-> DAI: Use PSM directly
-USDC <-> sDAI: PSMVariantXActions (1 and 2 depending on version of PSM active)
+ * DAI <-> sDAI: sDAI ERC-4626 interface
+ * USDC <-> DAI: Use PSM directly
+ * USDC <-> sDAI: PSMVariantXActions (1 and 2 depending on version of PSM active)
 
 ### Ethereum (post-NST launch)
 
-NST <-> sNST: PullUp provides this?
-USDC <-> NST: Will PSM be upgraded? If so, use PSM directly.
-USDC <-> sNST: PSMVariant2Actions
+ * NST <-> sNST: PullUp provides this?
+ * USDC <-> NST: Will PSM be upgraded? If so, use PSM directly.
+ * USDC <-> sNST: PSMVariant2Actions
 
-NST <-> NGT Farm: Directly deposit
-USDC <-> NGT Farm: PSMVariant2Actions
-NST <-> SPK Farm: Directly deposit
-USDC <-> SPK Farm: PSMVariant2Actions
+ * NST <-> NGT Farm: Directly deposit
+ * USDC <-> NGT Farm: PSMVariant2Actions
+ * NST <-> SPK Farm: Directly deposit
+ * USDC <-> SPK Farm: PSMVariant2Actions
 
 ### Non-Ethereum chains
 
 A three-way PSM will be provided here: https://github.com/marsfoundation/spark-psm. This can be used directly by UIs.
 
-NST <-> sNST: Swap in PSM
-USDC <-> NST: Swap in PSM
-USDC <-> sNST: PSMVariant3Actions (to deal with dust)
+ * NST <-> sNST: Swap in PSM
+ * USDC <-> NST: Swap in PSM
+ * USDC <-> sNST: PSMVariant3Actions (to deal with dust)
 
-NST <-> NGT Farm: Directly deposit
-USDC <-> NGT Farm: PSMVariant3Actions
-NST <-> SPK Farm: Directly deposit
-USDC <-> SPK Farm: PSMVariant3Actions
+ * NST <-> NGT Farm: Directly deposit
+ * USDC <-> NGT Farm: PSMVariant3Actions
+ * NST <-> SPK Farm: Directly deposit
+ * USDC <-> SPK Farm: PSMVariant3Actions
 
-## Contracts Available
-
-### PSMVariant1Actions
+## PSMVariant1Actions
 
 Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5dE0aBcEecab66Aee45393cC5A` and sDAI. This contract will not support NST, sNST. It is expected that the upgrade to the second verison of the USDC PSM will be done before the launch of these tokens.
 
 The code is written in a general way, but it is expected for this to be used with the USDC PSM and sDAI. Please note that all values are measured in either USDC or DAI and not sDAI shares. This keeps the UI simple in that you can specify `100e18` of sDAI to mean "100 DAI worth of sDAI" instead of doing the share conversion.
 
-Supported actions:
+### swapAndDeposit
 
 ```
 function swapAndDeposit(
@@ -75,6 +73,8 @@ usdc.approve(address(actions), 100e6);
 actions.swapAndDeposit(address(this), 100e6, 100e18);
 // User has 100 DAI worth of sDAI
 ```
+
+### withdrawAndSwap
 
 ```
 function withdrawAndSwap(
@@ -98,6 +98,8 @@ actions.withdrawAndSwap(address(this), 100e6, 100e18);
 // User has 100 USDC
 ```
 
+### redeemAndSwap
+
 ```
 function redeemAndSwap(
     address receiver,
@@ -120,7 +122,7 @@ actions.redeemAndSwap(address(this), bal, sDAI.convertToAssets(bal));
 // User has withdrawn as much USDC as possible
 ```
 
-### PSMVariant2Actions
+## PSMVariant2Actions
 
 TODO. Intended to be used with the second version of the USDC PSM located at https://github.com/makerdao/dss-lite-psm. This contract will expand support to include NST and sNST.
 
@@ -128,7 +130,7 @@ Supported actions:
 
  * TBD
 
-### PSMVariant3Actions
+## PSMVariant3Actions
 
 TODO. Intended to be used with the third version of the USDC PSM located at https://github.com/marsfoundation/spark-psm. This is intented to only be used with USDC, NST and sNST.
 
