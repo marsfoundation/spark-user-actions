@@ -69,7 +69,7 @@ contract PSMVariant1Actions {
     }
 
     /**
-     * @notice Withdraw a specified amount of `dai` from the `savingsToken` and swap for `gem` in the PSM.
+     * @notice Withdraw a specified amount of output `gem` with a maximum limit of `savingsToken` (in DAI units).
      *         Use this if you want an exact amount of `gem` tokens out. IE pay someone 10k exactly.
      * @dev    Please note that `maxAmountIn` is measured in `dai` due to increasing value of the `savingsToken`.
      *         `maxAmountIn` is used to protect in the case PSM fees change.
