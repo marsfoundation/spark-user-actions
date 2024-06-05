@@ -86,7 +86,7 @@ function withdrawAndSwap(
 
 There are two types of "withdrawals". The first is when you want an exact output measured in USDC. You can also use this to send another account an exact payment. In this case it is important not to send dust to the user.
 
-Sends at most `maxAmountIn` sDAI (measured in DAI units) and swap it for exactly `amountOut` USDC. Send the USDC to the `receiver`. Returns `amountIn` that was the amount of sDAI withdrawn (measured in DAI units).
+Sends at most `maxAmountIn` sDAI (measured in DAI units) and swap it for exactly `amountOut` USDC. Send the USDC to the `receiver`. Returns `amountIn` that was the amount of sDAI used to withdraw USDC (measured in DAI units).
 
 Example:
 
