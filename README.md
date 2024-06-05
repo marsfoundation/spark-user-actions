@@ -7,11 +7,11 @@
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 
-Common user actions in the Maker ecosystem related to DAI, sDAI, NST, sNST, USDC. USDT is unsupported because of a lack of first-class support in Maker at this time. USDT can be supported if Maker infrastructure is added in the future. Users wanting to enter or exit via USDT need to use DEX aggregators such as Cowswap.
+Common user actions in the Maker ecosystem related to DAI, sDAI, NST, sNST, and USDC. USDT is unsupported because of a lack of first-class support in Maker at this time. USDT can be supported if Maker infrastructure is added in the future. Users wanting to enter or exit via USDT need to use DEX aggregators such as Cowswap.
 
 These contracts are not meant to exhaustively cover all use cases, but group common actions where there is more than 1 transaction required. For example, swapping from USDC to sDAI is covered, but not DAI to sDAI because there is already a `deposit(...)` function on the sDAI contract. 
 
-These contracts are designed to revert when edge cases present themselves such as the PSM being empty or at max debt capacity. Users should feel confident that at most their transaction will fail instead of losing part of their principal.
+These contracts are designed to revert when edge cases present themselves such as the PSM being empty or at max debt capacity. Users should feel confident that in the worst case their transaction will fail instead of losing part of their principal.
 
 These contracts will be deployed at well-known addresses to be used across the Maker ecosystem.
 
@@ -63,7 +63,7 @@ function swapAndDeposit(
 ) external returns (uint256 amountOut);
 ```
 
-Deposit `amountIn` USDC and swap it for at least `minAmountOut` sDAI (measured in DAI units). Send the sDAI to the `receiver`.
+Deposit `amountIn` USDC and swap it for at least `minAmountOut` sDAI (measured in DAI units). Send the sDAI to the `receiver`. Returns `amountOut` that was sent to the receiver in sDAI (measured in DAI units).
 
 Example:
 
@@ -86,7 +86,7 @@ function withdrawAndSwap(
 
 There are two types of "withdrawals". The first is when you want an exact output measured in USDC. You can also use this to send another account an exact payment. In this case it is important not to send dust to the user.
 
-Sends at most `maxAmountIn` sDAI (measured in DAI units) and swap it for exactly `amountOut` USDC. Send the USDC to the `receiver`.
+Sends at most `maxAmountIn` sDAI (measured in DAI units) and swap it for exactly `amountOut` USDC. Send the USDC to the `receiver`. Returns `amountIn` that was the amount of sDAI withdrawn (measured in DAI units).
 
 Example:
 
@@ -110,7 +110,7 @@ function redeemAndSwap(
 
 This is the second type of "withdrawal" where a user wants to withdraw all of their sDAI balance to USDC. This method is better because it will not leave dust like in the previous function.
 
-Sends `shares` sDAI (measured in sDAI shares) and swap it for at least `minAmountOut` USDC. Send the USDC to the `receiver`.
+Sends `shares` sDAI (measured in sDAI shares) and swap it for at least `minAmountOut` USDC. Send the USDC to the `receiver`. Returns `amountOut` that was sent to the receiver in USDC.
 
 Example:
 
