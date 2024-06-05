@@ -53,6 +53,8 @@ Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5
 
 The code is written in a general way, but it is expected for this to be used with the USDC PSM and sDAI. Please note that all values are measured in either USDC or DAI and not sDAI shares. This keeps the UI simple in that you can specify `100e18` of sDAI to mean "100 DAI worth of sDAI" instead of doing the share conversion.
 
+Deployed at: [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
+
 ### swapAndDeposit
 
 ```
