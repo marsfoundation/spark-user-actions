@@ -21,18 +21,22 @@ These contracts will be deployed at well-known addresses to be used across the M
 
 DAI <-> sDAI: sDAI ERC-4626 interface  
 USDC <-> DAI: Use PSM directly  
-USDC <-> sDAI: PSMVariantXActions (1 and 2 depending on version of PSM active)  
+USDC <-> sDAI: PSMVariant1Actions  
 
 ### Ethereum (post-NST launch)
 
-NST <-> sNST: PullUp provides this?  
-USDC <-> NST: Will PSM be upgraded? If so, use PSM directly.  
-USDC <-> sNST: PSMVariant2Actions  
+NST <-> sNST: sNST ERC-4626 interface  
+USDC <-> NST: [NstPsmWrapper](https://github.com/makerdao/nst-wrappers/blob/dev/src/NstPsmWrapper.sol)  
+USDC <-> sNST: PSMVariant1Actions (future iterations)  
+DAI <-> NST: PSMVariant1Actions (future iterations)  
+sDAI <-> NST: PSMVariant1Actions (future iterations)  
+DAI <-> sNST: PSMVariant1Actions (future iterations)  
+sDAI <-> sNST: PSMVariant1Actions (future iterations)  
   
 NST <-> NGT Farm: Directly deposit  
-USDC <-> NGT Farm: PSMVariant2Actions  
+USDC <-> NGT Farm: PSMVariant1Actions (future iterations)  
 NST <-> SPK Farm: Directly deposit  
-USDC <-> SPK Farm: PSMVariant2Actions  
+USDC <-> SPK Farm: PSMVariant1Actions (future iterations)  
 
 ### Non-Ethereum chains
 
@@ -40,12 +44,12 @@ A three-way PSM will be provided here: https://github.com/marsfoundation/spark-p
 
 NST <-> sNST: Swap in PSM  
 USDC <-> NST: Swap in PSM  
-USDC <-> sNST: PSMVariant3Actions (to deal with dust)  
+USDC <-> sNST: PSMVariant2Actions (to deal with dust)  
   
 NST <-> NGT Farm: Directly deposit  
-USDC <-> NGT Farm: PSMVariant3Actions  
+USDC <-> NGT Farm: PSMVariant2Actions  
 NST <-> SPK Farm: Directly deposit  
-USDC <-> SPK Farm: PSMVariant3Actions  
+USDC <-> SPK Farm: PSMVariant2Actions  
 
 ## PSMVariant1Actions
 
@@ -54,6 +58,8 @@ Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5
 The code is written in a general way, but it is expected for this to be used with the USDC PSM and sDAI. Please note that all values are measured in either USDC or DAI and not sDAI shares. This keeps the UI simple in that you can specify `100e18` of sDAI to mean "100 DAI worth of sDAI" instead of doing the share conversion.
 
 Deployed at: [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
+
+Please note this variant is also compatible with the new [dss-lite-psm](https://github.com/makerdao/dss-lite-psm), so another deployment will be made after it is live.
 
 ### swapAndDeposit
 
@@ -125,14 +131,6 @@ actions.redeemAndSwap(address(this), bal, sDAI.convertToAssets(bal));
 ```
 
 ## PSMVariant2Actions
-
-TODO. Intended to be used with the second version of the USDC PSM located at https://github.com/makerdao/dss-lite-psm. This contract will expand support to include NST and sNST.
-
-Supported actions:
-
- * TBD
-
-## PSMVariant3Actions
 
 TODO. Intended to be used with the third version of the USDC PSM located at https://github.com/marsfoundation/spark-psm. This is intented to only be used with USDC, NST and sNST.
 
