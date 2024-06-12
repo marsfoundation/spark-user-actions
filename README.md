@@ -27,16 +27,16 @@ USDC <-> sDAI: PSMVariant1Actions
 
 NST <-> sNST: sNST ERC-4626 interface  
 USDC <-> NST: [NstPsmWrapper](https://github.com/makerdao/nst-wrappers/blob/dev/src/NstPsmWrapper.sol)  
-USDC <-> sNST: PSMVariant1Actions  
-DAI <-> NST: PSMVariant1Actions  
-sDAI <-> NST: PSMVariant1Actions  
-DAI <-> sNST: PSMVariant1Actions  
-sDAI <-> sNST: PSMVariant1Actions  
+USDC <-> sNST: PSMVariant1Actions (future iterations)  
+DAI <-> NST: PSMVariant1Actions (future iterations)  
+sDAI <-> NST: PSMVariant1Actions (future iterations)  
+DAI <-> sNST: PSMVariant1Actions (future iterations)  
+sDAI <-> sNST: PSMVariant1Actions (future iterations)  
   
 NST <-> NGT Farm: Directly deposit  
-USDC <-> NGT Farm: PSMVariant1Actions  
+USDC <-> NGT Farm: PSMVariant1Actions (future iterations)  
 NST <-> SPK Farm: Directly deposit  
-USDC <-> SPK Farm: PSMVariant1Actions  
+USDC <-> SPK Farm: PSMVariant1Actions (future iterations)  
 
 ### Non-Ethereum chains
 
