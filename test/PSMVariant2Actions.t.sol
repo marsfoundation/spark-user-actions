@@ -39,7 +39,7 @@ abstract contract PSMVariant2ActionsBase is Test {
 
         // Put some existing tokens into the PSM
         gem.mint(address(psm), 1000e6);
-        dai.mint(address(psm), 2 * MAX_DAI_AMOUNT);  // There are some edge cases around exactly MAX_DAI_AMOUNT, so add twice the amount
+        dai.mint(address(psm), type(uint128).max);  // Some big number of capacity
 
         actions = new PSMVariant1Actions(
             address(psm),
