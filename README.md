@@ -17,26 +17,36 @@ These contracts will be deployed at well-known addresses to be used across the M
 
 ## Top Level Actions Mapping
 
-### Ethereum (pre-NST launch)
+![Actions Mapping](./.assets/user-actions-overview.png)
+
+### Ethereum (Original PSM - Variant 1)
 
 DAI <-> sDAI: sDAI ERC-4626 interface  
 USDC <-> DAI: Use PSM directly  
 USDC <-> sDAI: PSMVariant1Actions  
 
-### Ethereum (post-NST launch)
+### Ethereum (PSM Lite - Variant 2)
+
+DAI <-> sDAI: sDAI ERC-4626 interface  
+USDC <-> DAI: Use PSM directly  
+USDC <-> sDAI: PSMVariant1Actions  
+
+*Note: No code changes are needed. Only a redeploy of `PSMVariant1Actions`.*
+
+### Ethereum (PSM Wrapper - Variant 3)
 
 NST <-> sNST: sNST ERC-4626 interface  
 USDC <-> NST: [NstPsmWrapper](https://github.com/makerdao/nst-wrappers/blob/dev/src/NstPsmWrapper.sol)  
-USDC <-> sNST: PSMVariant1Actions (future iterations)  
-DAI <-> NST: PSMVariant1Actions (future iterations)  
-sDAI <-> NST: PSMVariant1Actions (future iterations)  
-DAI <-> sNST: PSMVariant1Actions (future iterations)  
-sDAI <-> sNST: PSMVariant1Actions (future iterations)  
+USDC <-> sNST: PSMVariant1Actions  
   
-NST <-> NGT Farm: Directly deposit  
-USDC <-> NGT Farm: PSMVariant1Actions (future iterations)  
-NST <-> SPK Farm: Directly deposit  
-USDC <-> SPK Farm: PSMVariant1Actions (future iterations)  
+NST <-> Farms: Directly deposit/withdraw  
+
+### Ethereum (Migration Actions)
+
+DAI <-> NST: MigrationActions  
+sDAI -> NST: MigrationActions  
+DAI -> sNST: MigrationActions  
+sDAI -> sNST: MigrationActions  
 
 ### Non-Ethereum chains
 
@@ -44,22 +54,19 @@ A three-way PSM will be provided here: https://github.com/marsfoundation/spark-p
 
 NST <-> sNST: Swap in PSM  
 USDC <-> NST: Swap in PSM  
-USDC <-> sNST: PSMVariant2Actions (to deal with dust)  
+USDC <-> sNST: 3PSMActions (to deal with dust)  
   
-NST <-> NGT Farm: Directly deposit  
-USDC <-> NGT Farm: PSMVariant2Actions  
-NST <-> SPK Farm: Directly deposit  
-USDC <-> SPK Farm: PSMVariant2Actions  
+NST <-> Farms: Directly deposit/withdraw  
 
 ## PSMVariant1Actions
 
-Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5dE0aBcEecab66Aee45393cC5A` and sDAI. This contract will not support NST, sNST. It is expected that the upgrade to the second verison of the USDC PSM will be done before the launch of these tokens.
+Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5dE0aBcEecab66Aee45393cC5A` and sDAI, but also compatible with the newer lite psm and NST wrapper.
 
 The code is written in a general way, but it is expected for this to be used with the USDC PSM and sDAI. Please note that all values are measured in either USDC or DAI and not sDAI shares. This keeps the UI simple in that you can specify `100e18` of sDAI to mean "100 DAI worth of sDAI" instead of doing the share conversion.
 
-Deployed at: [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
-
-Please note this variant is also compatible with the new [dss-lite-psm](https://github.com/makerdao/dss-lite-psm), so another deployment will be made after it is live.
+Deployed at (Original PSM): [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
+Deployed at (PSM Lite): TBD  
+Deployed at (NST PSM Wrapper): TBD  
 
 ### swapAndDeposit
 
@@ -130,14 +137,17 @@ actions.redeemAndSwap(address(this), bal, sDAI.convertToAssets(bal));
 // User has withdrawn as much USDC as possible
 ```
 
-## PSMVariant2Actions
+## MigrationActions
 
-TODO. Intended to be used with the third version of the USDC PSM located at https://github.com/marsfoundation/spark-psm. This is intented to only be used with USDC, NST and sNST.
+TODO.
 
-Supported actions:
+Used to upgrade from DAI, sDAI to NST, sNST. Also contains a downgrade path for NST -> DAI for backwards compatibility.
 
- * USDC <-> NGT Farms
- * USDC <-> SPK Farms
+## 3PSMActions
+
+TODO.
+
+Intended to be used with the 3PSM located at https://github.com/marsfoundation/spark-psm. This is intented to only be used with USDC, NST and sNST.
 
 ## Usage
 

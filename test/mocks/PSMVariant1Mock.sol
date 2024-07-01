@@ -21,6 +21,7 @@ contract GemJoin {
 
 }
 
+// Mock of original PSM: https://github.com/makerdao/dss-psm/blob/222c96d4047e76680ed6803f07dd61aa2590e42b/src/psm.sol
 contract PSMVariant1Mock {
 
     MockERC20 public dai;
