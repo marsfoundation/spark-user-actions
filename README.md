@@ -54,7 +54,7 @@ A three-way PSM will be provided here: https://github.com/marsfoundation/spark-p
 
 NST <-> sNST: Swap in PSM  
 USDC <-> NST: Swap in PSM  
-USDC <-> sNST: PSM3Actions (to deal with dust)  
+USDC <-> sNST: Swap in PSM  
   
 NST <-> Farms: Directly deposit/withdraw  
 
@@ -142,12 +142,6 @@ actions.redeemAndSwap(address(this), bal, sDAI.convertToAssets(bal));
 TODO.
 
 Used to upgrade from DAI, sDAI to NST, sNST. Also contains a downgrade path for NST -> DAI for backwards compatibility.
-
-## PSM3Actions
-
-TODO.
-
-Intended to be used with the PSM3 located at https://github.com/marsfoundation/spark-psm. This is intented to only be used with USDC, NST and sNST.
 
 ## Usage
 
