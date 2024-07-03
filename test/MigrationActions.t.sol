@@ -178,6 +178,111 @@ contract MigrationActionsMigrateDAIToSNSTTests is MigrationActionsBase {
 
 }
 
+contract MigrationActionsMigrateSDAIAssetsToNSTTests is MigrationActionsBase {
+
+    function test_migrateSDAIAssetsToNST_insufficientBalance_boundary() public {
+        dai.mint(address(sdai), 100e18);  // Ensure dai is available in sdai
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18 - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.migrateSDAIAssetsToNST(receiver, 100e18);
+
+        sdai.mint(address(this), 1);
+
+        actions.migrateSDAIAssetsToNST(receiver, 100e18);
+    }
+
+    function test_migrateSDAIAssetsToNST_insufficientApproval_boundary() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18 - 1);
+        sdai.mint(address(this), 50e18);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.migrateSDAIAssetsToNST(receiver, 100e18);
+
+        sdai.approve(address(actions), 50e18);
+
+        actions.migrateSDAIAssetsToNST(receiver, 100e18);
+    }
+
+    function test_migrateSDAIAssetsToNST() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        assertEq(dai.balanceOf(address(this)),  0);
+        assertEq(nst.balanceOf(address(this)),  0);
+        assertEq(sdai.balanceOf(address(this)), 50e18);
+        assertEq(dai.balanceOf(receiver),       0);
+        assertEq(nst.balanceOf(receiver),       0);
+        assertEq(sdai.balanceOf(receiver),      0);
+
+        actions.migrateSDAIAssetsToNST(receiver, 100e18);
+
+        assertEq(dai.balanceOf(address(this)),  0);
+        assertEq(nst.balanceOf(address(this)),  0);
+        assertEq(sdai.balanceOf(address(this)), 0);
+        assertEq(dai.balanceOf(receiver),       0);
+        assertEq(nst.balanceOf(receiver),       100e18);
+        assertEq(sdai.balanceOf(receiver),      0);
+    }
+
+}
+
+contract MigrationActionsMigrateSDAISharesToNSTTests is MigrationActionsBase {
+
+    function test_migrateSDAISharesToNST_insufficientBalance_boundary() public {
+        dai.mint(address(sdai), 100e18);  // Ensure dai is available in sdai
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18 - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.migrateSDAISharesToNST(receiver, 50e18);
+
+        sdai.mint(address(this), 1);
+
+        actions.migrateSDAISharesToNST(receiver, 50e18);
+    }
+
+    function test_migrateSDAISharesToNST_insufficientApproval_boundary() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18 - 1);
+        sdai.mint(address(this), 50e18);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.migrateSDAISharesToNST(receiver, 50e18);
+
+        sdai.approve(address(actions), 50e18);
+
+        actions.migrateSDAISharesToNST(receiver, 50e18);
+    }
+
+    function test_migrateSDAISharesToNST() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        assertEq(dai.balanceOf(address(this)),  0);
+        assertEq(nst.balanceOf(address(this)),  0);
+        assertEq(sdai.balanceOf(address(this)), 50e18);
+        assertEq(dai.balanceOf(receiver),       0);
+        assertEq(nst.balanceOf(receiver),       0);
+        assertEq(sdai.balanceOf(receiver),      0);
+
+        uint256 assetsOut = actions.migrateSDAISharesToNST(receiver, 50e18);
+
+        assertEq(assetsOut,                     100e18);
+        assertEq(dai.balanceOf(address(this)),  0);
+        assertEq(nst.balanceOf(address(this)),  0);
+        assertEq(sdai.balanceOf(address(this)), 0);
+        assertEq(dai.balanceOf(receiver),       0);
+        assertEq(nst.balanceOf(receiver),       100e18);
+        assertEq(sdai.balanceOf(receiver),      0);
+    }
+
+}
+
 contract MigrationActionsMigrateSDAIAssetsToSNSTTests is MigrationActionsBase {
 
     function test_migrateSDAIAssetsToSNST_insufficientBalance_boundary() public {
