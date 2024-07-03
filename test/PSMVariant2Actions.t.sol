@@ -10,7 +10,10 @@ import { PSMVariant2Mock } from "./mocks/PSMVariant2Mock.sol";
 
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
-// NOTE: This test contract is demonstrate support for the second version of the PSM with the version 1 actions
+// NOTE: This test contract demonstrates support for the second version of the PSM with the
+//       version 1 actions. For this reason, all of the code is identical to
+//       test/PSMVariant1Actions.t.sol, except for the setup and the redundant testing of the
+//       PSMVariant1Actions constructor. This can be seen by diffing the two files.
 abstract contract PSMVariant2ActionsBase is Test {
 
     // 1 trillion max of each
