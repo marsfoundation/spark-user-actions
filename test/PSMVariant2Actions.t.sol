@@ -29,19 +29,23 @@ abstract contract PSMVariant2ActionsBase is Test {
     PSMVariant1Actions actions;
 
     address receiver = makeAddr("receiver");
+    address pocket   = makeAddr("pocket");
 
     function setUp() public {
         dai = new MockERC20('DAI',  'DAI',  18);
         gem = new MockERC20('USDC', 'USDC', 6);
 
         savingsToken = new ERC4626Mock(dai, 'Savings DAI', 'sDAI', 18);
-        psm          = new PSMVariant2Mock(dai, gem);
+        psm          = new PSMVariant2Mock(dai, gem, pocket);
+
+        // pocket will be the Coinbase wallet with an infinite approval
+        vm.prank(pocket);
+        gem.approve(address(psm), type(uint256).max);
 
         // Set the savings token to 1.25 conversion rate to keep the shares different
         savingsToken.__setShareConversionRate(1.25e18);
 
         // Put some existing tokens into the PSM
-        gem.mint(address(psm), 1000e6);
         dai.mint(address(psm), type(uint248).max);  // Some big number of capacity
 
         actions = new PSMVariant1Actions(

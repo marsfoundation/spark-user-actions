@@ -36,9 +36,6 @@ abstract contract PSMVariant1ActionsBase is Test {
         // Set the savings token to 1.25 conversion rate to keep the shares different
         savingsToken.__setShareConversionRate(1.25e18);
 
-        // Put some existing gems into the PSM
-        gem.mint(address(psm), 1000e6);
-
         actions = new PSMVariant1Actions(
             address(psm),
             address(savingsToken)

@@ -8,15 +8,17 @@ contract PSMVariant2Mock {
 
     MockERC20 public dai;
     MockERC20 public gem;
+    address   public pocket;
 
     uint256 public tin;
     uint256 public tout;
 
     uint256 private to18ConversionFactor;
 
-    constructor(MockERC20 _dai, MockERC20 _gem) {
+    constructor(MockERC20 _dai, MockERC20 _gem, address _pocket) {
         dai = _dai;
         gem = _gem;
+        pocket = _pocket;
 
         to18ConversionFactor = 10 ** (18 - gem.decimals());
     }
@@ -30,7 +32,7 @@ contract PSMVariant2Mock {
                 daiOutWad -= fee;
             }
         }
-        gem.transferFrom(msg.sender, address(this), gemAmt);
+        gem.transferFrom(msg.sender, pocket, gemAmt);
         dai.transfer(usr, daiOutWad);
     }
 
@@ -42,7 +44,7 @@ contract PSMVariant2Mock {
             daiInWad += fee;
         }
         dai.transferFrom(msg.sender, address(this), daiInWad);
-        gem.transfer(usr, gemAmt);
+        gem.transferFrom(pocket, usr, gemAmt);
     }
 
     function __setTin(uint256 _tin) external {
