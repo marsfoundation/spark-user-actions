@@ -396,3 +396,48 @@ contract MigrationActionsMigrateSDAISharesToSNSTTests is MigrationActionsBase {
     }
 
 }
+
+contract MigrationActionsDowngradeNSTToDAITests is MigrationActionsBase {
+
+    function test_downgradeNSTToDAI_insufficientBalance_boundary() public {
+        nst.approve(address(actions), 100e18);
+        nst.mint(address(this), 100e18 - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.downgradeNSTToDAI(receiver, 100e18);
+
+        nst.mint(address(this), 1);
+
+        actions.downgradeNSTToDAI(receiver, 100e18);
+    }
+
+    function test_downgradeNSTToDAI_insufficientApproval_boundary() public {
+        nst.approve(address(actions), 100e18 - 1);
+        nst.mint(address(this), 100e18);
+
+        vm.expectRevert(stdError.arithmeticError);
+        actions.downgradeNSTToDAI(receiver, 100e18);
+
+        nst.approve(address(actions), 100e18);
+
+        actions.downgradeNSTToDAI(receiver, 100e18);
+    }
+
+    function test_downgradeNSTToDAI() public {
+        nst.approve(address(actions), 100e18);
+        nst.mint(address(this), 100e18);
+
+        assertEq(dai.balanceOf(address(this)), 0);
+        assertEq(nst.balanceOf(address(this)), 100e18);
+        assertEq(dai.balanceOf(receiver),      0);
+        assertEq(nst.balanceOf(receiver),      0);
+
+        actions.downgradeNSTToDAI(receiver, 100e18);
+
+        assertEq(dai.balanceOf(address(this)), 0);
+        assertEq(nst.balanceOf(address(this)), 0);
+        assertEq(dai.balanceOf(receiver),      100e18);
+        assertEq(nst.balanceOf(receiver),      0);
+    }
+
+}
