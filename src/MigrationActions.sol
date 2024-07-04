@@ -61,8 +61,7 @@ contract MigrationActions {
      */
     function migrateDAIToNST(address receiver, uint256 assetsIn) external {
         dai.transferFrom(msg.sender, address(this), assetsIn);
-        daiJoin.join(address(this), assetsIn);
-        nstJoin.exit(receiver, assetsIn);
+        _migrateDAIToNST(receiver, assetsIn);
     }
 
     /**
@@ -73,8 +72,7 @@ contract MigrationActions {
      */
     function migrateDAIToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
         dai.transferFrom(msg.sender, address(this), assetsIn);
-        daiJoin.join(address(this), assetsIn);
-        nstJoin.exit(address(this), assetsIn);
+        _migrateDAIToNST(address(this), assetsIn);
         sharesOut = snst.deposit(assetsIn, receiver);
     }
 
@@ -85,8 +83,7 @@ contract MigrationActions {
      */
     function migrateSDAIAssetsToNST(address receiver, uint256 assetsIn) external {
         sdai.withdraw(assetsIn, address(this), msg.sender);
-        daiJoin.join(address(this), assetsIn);
-        nstJoin.exit(receiver, assetsIn);
+        _migrateDAIToNST(receiver, assetsIn);
     }
 
     /**
@@ -97,8 +94,7 @@ contract MigrationActions {
      */
     function migrateSDAISharesToNST(address receiver, uint256 sharesIn) external returns (uint256 assetsOut) {
         assetsOut = sdai.redeem(sharesIn, address(this), msg.sender);
-        daiJoin.join(address(this), assetsOut);
-        nstJoin.exit(receiver, assetsOut);
+        _migrateDAIToNST(receiver, assetsOut);
     }
 
     /**
@@ -109,8 +105,7 @@ contract MigrationActions {
      */
     function migrateSDAIAssetsToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
         sdai.withdraw(assetsIn, address(this), msg.sender);
-        daiJoin.join(address(this), assetsIn);
-        nstJoin.exit(address(this), assetsIn);
+        _migrateDAIToNST(address(this), assetsIn);
         sharesOut = snst.deposit(assetsIn, receiver);
     }
 
@@ -122,8 +117,7 @@ contract MigrationActions {
      */
     function migrateSDAISharesToSNST(address receiver, uint256 sharesIn) external returns (uint256 sharesOut) {
         uint256 assets = sdai.redeem(sharesIn, address(this), msg.sender);
-        daiJoin.join(address(this), assets);
-        nstJoin.exit(address(this), assets);
+        _migrateDAIToNST(address(this), assets);
         sharesOut = snst.deposit(assets, receiver);
     }
 
@@ -136,6 +130,15 @@ contract MigrationActions {
         nst.transferFrom(msg.sender, address(this), assetsIn);
         nstJoin.join(address(this), assetsIn);
         daiJoin.exit(receiver, assetsIn);
+    }
+
+    /**********************************************************************************************/
+    /*** Internal helper functions                                                              ***/
+    /**********************************************************************************************/
+
+    function _migrateDAIToNST(address receiver, uint256 amount) internal {
+        daiJoin.join(address(this), amount);
+        nstJoin.exit(receiver,      amount);
     }
 
 }
