@@ -14,8 +14,8 @@ import { MigrationActions } from "src/MigrationActions.sol";
 abstract contract MigrationActionsBase is Test {
 
     MockERC20   public dai;
-    MockERC20   public nst;
     ERC4626Mock public sdai;
+    MockERC20   public nst;
     ERC4626Mock public snst;
 
     VatMock  public vat;
