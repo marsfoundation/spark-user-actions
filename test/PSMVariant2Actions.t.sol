@@ -6,11 +6,15 @@ import "forge-std/Test.sol";
 import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
 import { ERC4626Mock }     from "./mocks/ERC4626Mock.sol";
-import { PSMVariant1Mock } from "./mocks/PSMVariant1Mock.sol";
+import { PSMVariant2Mock } from "./mocks/PSMVariant2Mock.sol";
 
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
-abstract contract PSMVariant1ActionsBase is Test {
+// NOTE: This test contract demonstrates support for the second version of the PSM with the
+//       version 1 actions. For this reason, all of the code is identical to
+//       test/PSMVariant1Actions.t.sol, except for the setup and the redundant testing of the
+//       PSMVariant1Actions constructor. This can be seen by diffing the two files.
+abstract contract PSMVariant2ActionsBase is Test {
 
     // 1 trillion max of each
     uint256 constant MAX_DAI_AMOUNT = 1e12 * 1e18;
@@ -20,21 +24,29 @@ abstract contract PSMVariant1ActionsBase is Test {
     MockERC20 gem;
 
     ERC4626Mock     savingsToken;
-    PSMVariant1Mock psm;
+    PSMVariant2Mock psm;
 
     PSMVariant1Actions actions;
 
     address receiver = makeAddr("receiver");
+    address pocket   = makeAddr("pocket");
 
     function setUp() public {
         dai = new MockERC20('DAI',  'DAI',  18);
         gem = new MockERC20('USDC', 'USDC', 6);
 
         savingsToken = new ERC4626Mock(dai, 'Savings DAI', 'sDAI', 18);
-        psm          = new PSMVariant1Mock(dai, gem);
+        psm          = new PSMVariant2Mock(dai, gem, pocket);
+
+        // pocket will be the Coinbase wallet with an infinite approval
+        vm.prank(pocket);
+        gem.approve(address(psm), type(uint256).max);
 
         // Set the savings token to 1.25 conversion rate to keep the shares different
         savingsToken.__setShareConversionRate(1.25e18);
+
+        // Put some existing tokens into the PSM
+        dai.mint(address(psm), type(uint248).max);  // Some big number of capacity
 
         actions = new PSMVariant1Actions(
             address(psm),
@@ -69,28 +81,7 @@ abstract contract PSMVariant1ActionsBase is Test {
 
 }
 
-contract PSMVariant1ActionsConstructorTests is PSMVariant1ActionsBase {
-
-    function test_constructor() public {
-        // For coverage
-        actions = new PSMVariant1Actions(
-            address(psm),
-            address(savingsToken)
-        );
-
-        assertEq(address(actions.psm()),          address(psm));
-        assertEq(address(actions.dai()),          address(dai));
-        assertEq(address(actions.gem()),          address(gem));
-        assertEq(address(actions.savingsToken()), address(savingsToken));
-
-        assertEq(gem.allowance(address(actions), address(psm.gemJoin())), type(uint256).max);
-        assertEq(dai.allowance(address(actions), address(psm)),           type(uint256).max);
-        assertEq(dai.allowance(address(actions), address(savingsToken)),  type(uint256).max);
-    }
-
-}
-
-contract PSMVariant1ActionsSwapAndDepositTests is PSMVariant1ActionsBase {
+contract PSMVariant2ActionsSwapAndDepositTests is PSMVariant2ActionsBase {
 
     function test_swapAndDeposit_insufficientBalance_boundary() public {
         gem.approve(address(actions), 100e6);
@@ -261,7 +252,7 @@ contract PSMVariant1ActionsSwapAndDepositTests is PSMVariant1ActionsBase {
 
 }
 
-contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
+contract PSMVariant2ActionsWithdrawAndSwapTests is PSMVariant2ActionsBase {
 
     function test_withdrawAndSwap_insufficientBalance_boundary() public {
         _deposit(address(this), 100e6);
@@ -429,7 +420,7 @@ contract PSMVariant1ActionsWithdrawAndSwapTests is PSMVariant1ActionsBase {
 
 }
 
-contract PSMVariant1ActionsRedeemAndSwapTests is PSMVariant1ActionsBase {
+contract PSMVariant2ActionsRedeemAndSwapTests is PSMVariant2ActionsBase {
 
     function test_redeemAndSwap_insufficientBalance_boundary() public {
         _deposit(address(this), 100e6);
