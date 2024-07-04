@@ -55,27 +55,27 @@ contract MigrationActions {
     }
 
     /**
-     * @notice Migrate `amount` of `dai` to `nst`.
+     * @notice Migrate `assetsIn` of `dai` to `nst`.
      * @param  receiver The receiver of the `nst`.
-     * @param  amount   The amount of the `dai` to migrate.
+     * @param  assetsIn The amount of the `dai` to migrate.
      */
-    function migrateDAIToNST(address receiver, uint256 amount) external {
-        dai.transferFrom(msg.sender, address(this), amount);
-        daiJoin.join(address(this), amount);
-        nstJoin.exit(receiver, amount);
+    function migrateDAIToNST(address receiver, uint256 assetsIn) external {
+        dai.transferFrom(msg.sender, address(this), assetsIn);
+        daiJoin.join(address(this), assetsIn);
+        nstJoin.exit(receiver, assetsIn);
     }
 
     /**
-     * @notice Migrate `amount` of `dai` to `snst`.
+     * @notice Migrate `assetsIn` of `dai` to `snst`.
      * @param  receiver  The receiver of the `snst`.
-     * @param  amount    The amount of the `dai` to migrate.
+     * @param  assetsIn  The amount of the `dai` to migrate.
      * @return sharesOut The amount of `snst` shares received.
      */
-    function migrateDAIToSNST(address receiver, uint256 amount) external returns (uint256 sharesOut) {
-        dai.transferFrom(msg.sender, address(this), amount);
-        daiJoin.join(address(this), amount);
-        nstJoin.exit(address(this), amount);
-        sharesOut = snst.deposit(amount, receiver);
+    function migrateDAIToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
+        dai.transferFrom(msg.sender, address(this), assetsIn);
+        daiJoin.join(address(this), assetsIn);
+        nstJoin.exit(address(this), assetsIn);
+        sharesOut = snst.deposit(assetsIn, receiver);
     }
 
     /**
@@ -128,14 +128,14 @@ contract MigrationActions {
     }
 
     /**
-     * @notice Downgrade `amount` of `nst` to `dai`.
+     * @notice Downgrade `assetsIn` of `nst` to `dai`.
      * @param  receiver The receiver of the `dai`.
-     * @param  amount   The amount of the `nst` to downgrade.
+     * @param  assetsIn The amount of the `nst` to downgrade.
      */
-    function downgradeNSTToDAI(address receiver, uint256 amount) external {
-        nst.transferFrom(msg.sender, address(this), amount);
-        nstJoin.join(address(this), amount);
-        daiJoin.exit(receiver, amount);
+    function downgradeNSTToDAI(address receiver, uint256 assetsIn) external {
+        nst.transferFrom(msg.sender, address(this), assetsIn);
+        nstJoin.join(address(this), assetsIn);
+        daiJoin.exit(receiver, assetsIn);
     }
 
 }
