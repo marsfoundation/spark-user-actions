@@ -129,7 +129,7 @@ contract MigrationActions {
     function downgradeNSTToDAI(address receiver, uint256 assetsIn) external {
         nst.transferFrom(msg.sender, address(this), assetsIn);
         nstJoin.join(address(this), assetsIn);
-        daiJoin.exit(receiver, assetsIn);
+        daiJoin.exit(receiver,      assetsIn);
     }
 
     /**********************************************************************************************/
