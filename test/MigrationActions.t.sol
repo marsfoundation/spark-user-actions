@@ -52,6 +52,19 @@ abstract contract MigrationActionsBase is Test {
         );
     }
 
+    function _assertBalances(
+        address user,
+        uint256 daiBalance,
+        uint256 sdaiBalance,
+        uint256 nstBalance,
+        uint256 snstBalance
+    ) internal view {
+        assertEq(dai.balanceOf(user),  daiBalance);
+        assertEq(sdai.balanceOf(user), sdaiBalance);
+        assertEq(nst.balanceOf(user),  nstBalance);
+        assertEq(snst.balanceOf(user), snstBalance);
+    }
+
 }
 
 contract MigrationActionsConstructorTests is MigrationActionsBase {
@@ -113,17 +126,37 @@ contract MigrationActionsMigrateDAIToNSTTests is MigrationActionsBase {
         dai.approve(address(actions), 100e18);
         dai.mint(address(this), 100e18);
 
-        assertEq(dai.balanceOf(address(this)), 100e18);
-        assertEq(nst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),      0);
-        assertEq(nst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         actions.migrateDAIToNST(receiver, 100e18);
 
-        assertEq(dai.balanceOf(address(this)), 0);
-        assertEq(nst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),      0);
-        assertEq(nst.balanceOf(receiver),      100e18);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
     }
 
 }
@@ -158,22 +191,38 @@ contract MigrationActionsMigrateDAIToSNSTTests is MigrationActionsBase {
         dai.approve(address(actions), 100e18);
         dai.mint(address(this), 100e18);
 
-        assertEq(dai.balanceOf(address(this)),  100e18);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(snst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         uint256 sharesOut = actions.migrateDAIToSNST(receiver, 100e18);
+        assertEq(sharesOut, 80e18);
 
-        assertEq(sharesOut,                     80e18);
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(snst.balanceOf(receiver),      80e18);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
     }
 
 }
@@ -211,21 +260,37 @@ contract MigrationActionsMigrateSDAIAssetsToNSTTests is MigrationActionsBase {
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
 
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 50e18);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         actions.migrateSDAIAssetsToNST(receiver, 100e18);
 
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       100e18);
-        assertEq(sdai.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
     }
 
 }
@@ -263,22 +328,38 @@ contract MigrationActionsMigrateSDAISharesToNSTTests is MigrationActionsBase {
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
 
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 50e18);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         uint256 assetsOut = actions.migrateSDAISharesToNST(receiver, 50e18);
+        assertEq(assetsOut, 100e18);
 
-        assertEq(assetsOut,                     100e18);
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       100e18);
-        assertEq(sdai.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
     }
 
 }
@@ -316,26 +397,38 @@ contract MigrationActionsMigrateSDAIAssetsToSNSTTests is MigrationActionsBase {
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
 
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 50e18);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
-        assertEq(snst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         uint256 sharesOut = actions.migrateSDAIAssetsToSNST(receiver, 100e18);
+        assertEq(sharesOut, 80e18);
 
-        assertEq(sharesOut,                     80e18);
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 0);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
-        assertEq(snst.balanceOf(receiver),      80e18);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
     }
 
 }
@@ -373,26 +466,38 @@ contract MigrationActionsMigrateSDAISharesToSNSTTests is MigrationActionsBase {
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
 
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 50e18);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
-        assertEq(snst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         uint256 sharesOut = actions.migrateSDAISharesToSNST(receiver, 50e18);
+        assertEq(sharesOut, 80e18);
 
-        assertEq(sharesOut,                     80e18);
-        assertEq(dai.balanceOf(address(this)),  0);
-        assertEq(nst.balanceOf(address(this)),  0);
-        assertEq(sdai.balanceOf(address(this)), 0);
-        assertEq(snst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),       0);
-        assertEq(nst.balanceOf(receiver),       0);
-        assertEq(sdai.balanceOf(receiver),      0);
-        assertEq(snst.balanceOf(receiver),      80e18);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
     }
 
 }
@@ -427,17 +532,37 @@ contract MigrationActionsDowngradeNSTToDAITests is MigrationActionsBase {
         nst.approve(address(actions), 100e18);
         nst.mint(address(this), 100e18);
 
-        assertEq(dai.balanceOf(address(this)), 0);
-        assertEq(nst.balanceOf(address(this)), 100e18);
-        assertEq(dai.balanceOf(receiver),      0);
-        assertEq(nst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
 
         actions.downgradeNSTToDAI(receiver, 100e18);
 
-        assertEq(dai.balanceOf(address(this)), 0);
-        assertEq(nst.balanceOf(address(this)), 0);
-        assertEq(dai.balanceOf(receiver),      100e18);
-        assertEq(nst.balanceOf(receiver),      0);
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+        _assertBalances({
+            user:        receiver,
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
     }
 
 }
