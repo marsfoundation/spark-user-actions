@@ -16,8 +16,8 @@ contract PSMVariant2Mock {
     uint256 private to18ConversionFactor;
 
     constructor(MockERC20 _dai, MockERC20 _gem, address _pocket) {
-        dai = _dai;
-        gem = _gem;
+        dai    = _dai;
+        gem    = _gem;
         pocket = _pocket;
 
         to18ConversionFactor = 10 ** (18 - gem.decimals());
