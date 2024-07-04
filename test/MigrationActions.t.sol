@@ -122,7 +122,7 @@ contract MigrationActionsMigrateDAIToNSTTests is MigrationActionsBase {
         actions.migrateDAIToNST(receiver, 100e18);
     }
 
-    function test_migrateDAIToNST() public {
+    function test_migrateDAIToNST_differentReceiver() public {
         dai.approve(address(actions), 100e18);
         dai.mint(address(this), 100e18);
 
@@ -159,6 +159,29 @@ contract MigrationActionsMigrateDAIToNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateDAIToNST_sameReceiver() public {
+        dai.approve(address(actions), 100e18);
+        dai.mint(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        actions.migrateDAIToNST(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
+    }
+
 }
 
 contract MigrationActionsMigrateDAIToSNSTTests is MigrationActionsBase {
@@ -187,7 +210,7 @@ contract MigrationActionsMigrateDAIToSNSTTests is MigrationActionsBase {
         actions.migrateDAIToSNST(receiver, 100e18);
     }
 
-    function test_migrateDAIToSNST() public {
+    function test_migrateDAIToSNST_differentReceiver() public {
         dai.approve(address(actions), 100e18);
         dai.mint(address(this), 100e18);
 
@@ -225,6 +248,30 @@ contract MigrationActionsMigrateDAIToSNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateDAIToSNST_sameReceiver() public {
+        dai.approve(address(actions), 100e18);
+        dai.mint(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        uint256 sharesOut = actions.migrateDAIToSNST(address(this), 100e18);
+        assertEq(sharesOut, 80e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
+    }
+
 }
 
 contract MigrationActionsMigrateSDAIAssetsToNSTTests is MigrationActionsBase {
@@ -255,7 +302,7 @@ contract MigrationActionsMigrateSDAIAssetsToNSTTests is MigrationActionsBase {
         actions.migrateSDAIAssetsToNST(receiver, 100e18);
     }
 
-    function test_migrateSDAIAssetsToNST() public {
+    function test_migrateSDAIAssetsToNST_differentReceiver() public {
         dai.mint(address(sdai), 100e18);
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
@@ -293,6 +340,30 @@ contract MigrationActionsMigrateSDAIAssetsToNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateSDAIAssetsToNST_sameReceiver() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        actions.migrateSDAIAssetsToNST(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
+    }
+
 }
 
 contract MigrationActionsMigrateSDAISharesToNSTTests is MigrationActionsBase {
@@ -323,7 +394,7 @@ contract MigrationActionsMigrateSDAISharesToNSTTests is MigrationActionsBase {
         actions.migrateSDAISharesToNST(receiver, 50e18);
     }
 
-    function test_migrateSDAISharesToNST() public {
+    function test_migrateSDAISharesToNST_differentReceiver() public {
         dai.mint(address(sdai), 100e18);
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
@@ -362,6 +433,31 @@ contract MigrationActionsMigrateSDAISharesToNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateSDAISharesToNST_sameReceiver() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        uint256 assetsOut = actions.migrateSDAISharesToNST(address(this), 50e18);
+        assertEq(assetsOut, 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
+    }
+
 }
 
 contract MigrationActionsMigrateSDAIAssetsToSNSTTests is MigrationActionsBase {
@@ -392,7 +488,7 @@ contract MigrationActionsMigrateSDAIAssetsToSNSTTests is MigrationActionsBase {
         actions.migrateSDAIAssetsToSNST(receiver, 100e18);
     }
 
-    function test_migrateSDAIAssetsToSNST() public {
+    function test_migrateSDAIAssetsToSNST_differentReceiver() public {
         dai.mint(address(sdai), 100e18);
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
@@ -431,6 +527,31 @@ contract MigrationActionsMigrateSDAIAssetsToSNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateSDAIAssetsToSNST_sameReceiver() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        uint256 sharesOut = actions.migrateSDAIAssetsToSNST(address(this), 100e18);
+        assertEq(sharesOut, 80e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
+    }
+
 }
 
 contract MigrationActionsMigrateSDAISharesToSNSTTests is MigrationActionsBase {
@@ -461,7 +582,7 @@ contract MigrationActionsMigrateSDAISharesToSNSTTests is MigrationActionsBase {
         actions.migrateSDAISharesToSNST(receiver, 50e18);
     }
 
-    function test_migrateSDAISharesToSNST() public {
+    function test_migrateSDAISharesToSNST_differentReceiver() public {
         dai.mint(address(sdai), 100e18);
         sdai.approve(address(actions), 50e18);
         sdai.mint(address(this), 50e18);
@@ -500,6 +621,31 @@ contract MigrationActionsMigrateSDAISharesToSNSTTests is MigrationActionsBase {
         });
     }
 
+    function test_migrateSDAISharesToSNST_sameReceiver() public {
+        dai.mint(address(sdai), 100e18);
+        sdai.approve(address(actions), 50e18);
+        sdai.mint(address(this), 50e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 50e18,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+
+        uint256 sharesOut = actions.migrateSDAISharesToSNST(address(this), 50e18);
+        assertEq(sharesOut, 80e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 80e18
+        });
+    }
+
 }
 
 contract MigrationActionsDowngradeNSTToDAITests is MigrationActionsBase {
@@ -528,7 +674,7 @@ contract MigrationActionsDowngradeNSTToDAITests is MigrationActionsBase {
         actions.downgradeNSTToDAI(receiver, 100e18);
     }
 
-    function test_downgradeNSTToDAI() public {
+    function test_downgradeNSTToDAI_differentReceiver() public {
         nst.approve(address(actions), 100e18);
         nst.mint(address(this), 100e18);
 
@@ -558,6 +704,29 @@ contract MigrationActionsDowngradeNSTToDAITests is MigrationActionsBase {
         });
         _assertBalances({
             user:        receiver,
+            daiBalance:  100e18,
+            sdaiBalance: 0,
+            nstBalance:  0,
+            snstBalance: 0
+        });
+    }
+
+    function test_downgradeNSTToDAI_sameReceiver() public {
+        nst.approve(address(actions), 100e18);
+        nst.mint(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
+            daiBalance:  0,
+            sdaiBalance: 0,
+            nstBalance:  100e18,
+            snstBalance: 0
+        });
+
+        actions.downgradeNSTToDAI(address(this), 100e18);
+
+        _assertBalances({
+            user:        address(this),
             daiBalance:  100e18,
             sdaiBalance: 0,
             nstBalance:  0,
