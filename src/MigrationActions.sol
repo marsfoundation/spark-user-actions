@@ -21,8 +21,8 @@ interface VatLike {
 contract MigrationActions {
 
     IERC20   public immutable dai;
-    IERC4626 public immutable sdai;
     IERC20   public immutable nst;
+    IERC4626 public immutable sdai;
     IERC4626 public immutable snst;
 
     VatLike  public immutable vat;
@@ -59,7 +59,7 @@ contract MigrationActions {
      * @param  receiver The receiver of the `nst`.
      * @param  assetsIn The amount of the `dai` to migrate.
      */
-    function migrateDAIToNST(address receiver, uint256 assetsIn) external {
+    function migrateDAIToNST(address receiver, uint256 assetsIn) public {
         dai.transferFrom(msg.sender, address(this), assetsIn);
         _migrateDAIToNST(receiver, assetsIn);
     }
@@ -71,8 +71,7 @@ contract MigrationActions {
      * @return sharesOut The amount of `snst` shares received.
      */
     function migrateDAIToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
-        dai.transferFrom(msg.sender, address(this), assetsIn);
-        _migrateDAIToNST(address(this), assetsIn);
+        migrateDAIToNST(address(this), assetsIn);
         sharesOut = snst.deposit(assetsIn, receiver);
     }
 
@@ -81,7 +80,7 @@ contract MigrationActions {
      * @param  receiver The receiver of the `nst`.
      * @param  assetsIn The amount of the `sdai` to migrate in assets.
      */
-    function migrateSDAIAssetsToNST(address receiver, uint256 assetsIn) external {
+    function migrateSDAIAssetsToNST(address receiver, uint256 assetsIn) public {
         sdai.withdraw(assetsIn, address(this), msg.sender);
         _migrateDAIToNST(receiver, assetsIn);
     }
@@ -92,39 +91,37 @@ contract MigrationActions {
      * @param  sharesIn  The amount of the `sdai` to migrate in shares.
      * @return assetsOut The amount of `nst` assets received.
      */
-    function migrateSDAISharesToNST(address receiver, uint256 sharesIn) external returns (uint256 assetsOut) {
+    function migrateSDAISharesToNST(address receiver, uint256 sharesIn) public returns (uint256 assetsOut) {
         assetsOut = sdai.redeem(sharesIn, address(this), msg.sender);
         _migrateDAIToNST(receiver, assetsOut);
     }
 
     /**
-     * @notice Migrate `assetsIn` of `sdai` to `snst`.
+     * @notice Migrate `assetsIn` of `sdai` (denominated in `dai`) to `snst`.
      * @param  receiver  The receiver of the `snst`.
-     * @param  assetsIn  The amount of the `sdai` to migrate in assets.
+     * @param  assetsIn  The amount of the `sdai` to migrate (denominated in `dai`).
      * @return sharesOut The amount of `snst` shares received.
      */
     function migrateSDAIAssetsToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
-        sdai.withdraw(assetsIn, address(this), msg.sender);
-        _migrateDAIToNST(address(this), assetsIn);
+        migrateSDAIAssetsToNST(address(this), assetsIn);
         sharesOut = snst.deposit(assetsIn, receiver);
     }
 
     /**
      * @notice Migrate `sharesIn` of `sdai` to `snst`.
      * @param  receiver  The receiver of the `snst`.
-     * @param  sharesIn  The amount of the `sdai` to migrate in shares.
+     * @param  sharesIn  The amount of `sdai` to migrate in shares.
      * @return sharesOut The amount of `snst` shares received.
      */
     function migrateSDAISharesToSNST(address receiver, uint256 sharesIn) external returns (uint256 sharesOut) {
-        uint256 assets = sdai.redeem(sharesIn, address(this), msg.sender);
-        _migrateDAIToNST(address(this), assets);
+        uint256 assets = migrateSDAISharesToNST(address(this), sharesIn);
         sharesOut = snst.deposit(assets, receiver);
     }
 
     /**
      * @notice Downgrade `assetsIn` of `nst` to `dai`.
      * @param  receiver The receiver of the `dai`.
-     * @param  assetsIn The amount of the `nst` to downgrade.
+     * @param  assetsIn The amount of `nst` to downgrade.
      */
     function downgradeNSTToDAI(address receiver, uint256 assetsIn) external {
         nst.transferFrom(msg.sender, address(this), assetsIn);
