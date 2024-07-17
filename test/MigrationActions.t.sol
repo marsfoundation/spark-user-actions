@@ -14,8 +14,8 @@ import { MigrationActions } from "src/MigrationActions.sol";
 abstract contract MigrationActionsBase is Test {
 
     MockERC20   public dai;
-    ERC4626Mock public sdai;
     MockERC20   public nst;
+    ERC4626Mock public sdai;
     ERC4626Mock public snst;
 
     VatMock  public vat;
@@ -41,8 +41,8 @@ abstract contract MigrationActionsBase is Test {
         snst.__setShareConversionRate(1.25e18);
 
         // Give some existing balance to represent existing ERC20s
-        vat.__setDaibalance(address(daiJoin), 1_000_000e45);
-        vat.__setDaibalance(address(nstJoin), 1_000_000e45);
+        vat.__setDaiBalance(address(daiJoin), 1_000_000e45);
+        vat.__setDaiBalance(address(nstJoin), 1_000_000e45);
 
         actions = new MigrationActions(
             address(sdai),

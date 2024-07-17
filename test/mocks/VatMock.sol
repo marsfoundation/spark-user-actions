@@ -18,7 +18,7 @@ contract VatMock {
         dai[dst] += amount;
     }
 
-    function __setDaibalance(address usr, uint256 amount) external {
+    function __setDaiBalance(address usr, uint256 amount) external {
         dai[usr] = amount;
     }
 

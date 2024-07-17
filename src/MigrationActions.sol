@@ -36,8 +36,9 @@ contract MigrationActions {
         address _nstJoin
     ) {
         sdai = IERC4626(_sdai);
-        dai  = IERC20(sdai.asset());
         snst = IERC4626(_snst);
+        
+        dai  = IERC20(sdai.asset());
         nst  = IERC20(snst.asset());
 
         daiJoin = JoinLike(_daiJoin);
@@ -56,8 +57,8 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `assetsIn` of `dai` to `nst`.
-     * @param  receiver The receiver of the `nst`.
-     * @param  assetsIn The amount of the `dai` to migrate.
+     * @param  receiver The receiver of `nst`.
+     * @param  assetsIn The amount of `dai` to migrate.
      */
     function migrateDAIToNST(address receiver, uint256 assetsIn) public {
         dai.transferFrom(msg.sender, address(this), assetsIn);
@@ -66,8 +67,8 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `assetsIn` of `dai` to `snst`.
-     * @param  receiver  The receiver of the `snst`.
-     * @param  assetsIn  The amount of the `dai` to migrate.
+     * @param  receiver  The receiver of `snst`.
+     * @param  assetsIn  The amount of `dai` to migrate.
      * @return sharesOut The amount of `snst` shares received.
      */
     function migrateDAIToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
@@ -77,8 +78,8 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `assetsIn` of `sdai` to `nst`.
-     * @param  receiver The receiver of the `nst`.
-     * @param  assetsIn The amount of the `sdai` to migrate in assets.
+     * @param  receiver The receiver of `nst`.
+     * @param  assetsIn The amount of `sdai` to migrate in assets.
      */
     function migrateSDAIAssetsToNST(address receiver, uint256 assetsIn) public {
         sdai.withdraw(assetsIn, address(this), msg.sender);
@@ -87,8 +88,8 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `sharesIn` of `sdai` to `nst`.
-     * @param  receiver  The receiver of the `nst`.
-     * @param  sharesIn  The amount of the `sdai` to migrate in shares.
+     * @param  receiver  The receiver of `nst`.
+     * @param  sharesIn  The amount of `sdai` to migrate in shares.
      * @return assetsOut The amount of `nst` assets received.
      */
     function migrateSDAISharesToNST(address receiver, uint256 sharesIn) public returns (uint256 assetsOut) {
@@ -98,8 +99,8 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `assetsIn` of `sdai` (denominated in `dai`) to `snst`.
-     * @param  receiver  The receiver of the `snst`.
-     * @param  assetsIn  The amount of the `sdai` to migrate (denominated in `dai`).
+     * @param  receiver  The receiver of `snst`.
+     * @param  assetsIn  The amount of `sdai` to migrate (denominated in `dai`).
      * @return sharesOut The amount of `snst` shares received.
      */
     function migrateSDAIAssetsToSNST(address receiver, uint256 assetsIn) external returns (uint256 sharesOut) {
@@ -109,7 +110,7 @@ contract MigrationActions {
 
     /**
      * @notice Migrate `sharesIn` of `sdai` to `snst`.
-     * @param  receiver  The receiver of the `snst`.
+     * @param  receiver  The receiver of `snst`.
      * @param  sharesIn  The amount of `sdai` to migrate in shares.
      * @return sharesOut The amount of `snst` shares received.
      */
@@ -120,7 +121,7 @@ contract MigrationActions {
 
     /**
      * @notice Downgrade `assetsIn` of `nst` to `dai`.
-     * @param  receiver The receiver of the `dai`.
+     * @param  receiver The receiver of `dai`.
      * @param  assetsIn The amount of `nst` to downgrade.
      */
     function downgradeNSTToDAI(address receiver, uint256 assetsIn) external {
