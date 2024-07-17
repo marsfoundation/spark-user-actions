@@ -37,8 +37,9 @@ contract MigrationActions {
     ) {
         sdai = IERC4626(_sdai);
         snst = IERC4626(_snst);
-        dai  = IERC20(sdai.asset());
-        nst  = IERC20(snst.asset());
+
+        dai = IERC20(sdai.asset());
+        nst = IERC20(snst.asset());
 
         daiJoin = JoinLike(_daiJoin);
         nstJoin = JoinLike(_nstJoin);
