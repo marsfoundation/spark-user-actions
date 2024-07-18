@@ -5,9 +5,9 @@ import "forge-std/Test.sol";
 
 import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
-import { VatMock }     from "test/mocks/VatMock.sol";
-import { JoinMock }    from "test/mocks/JoinMock.sol";
-import { ERC4626Mock } from "test/mocks/ERC4626Mock.sol";
+import { VatMock }     from "./mocks/VatMock.sol";
+import { JoinMock }    from "./mocks/JoinMock.sol";
+import { ERC4626Mock } from "./mocks/ERC4626Mock.sol";
 
 import { MigrationActions } from "src/MigrationActions.sol";
 

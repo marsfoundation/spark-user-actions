@@ -5,8 +5,8 @@ import "forge-std/Test.sol";
 
 import { MockERC20 } from "lib/erc20-helpers/src/MockERC20.sol";
 
-import { ERC4626Mock }     from "test/mocks/ERC4626Mock.sol";
-import { PSMVariant1Mock } from "test/mocks/PSMVariant1Mock.sol";
+import { ERC4626Mock }     from "./mocks/ERC4626Mock.sol";
+import { PSMVariant1Mock } from "./mocks/PSMVariant1Mock.sol";
 
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
