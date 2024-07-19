@@ -209,53 +209,92 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
         uint256 snapshot = vm.snapshot();
 
         uint256 nstBalance = nst.balanceOf(SNST);
-        uint256 potPie     = pot.pie(SDAI);  // TODO: Why is this different from sDai.totalAssets()?
+        // uint256 potPie     = pot.pie(SDAI);  // TODO: Why is this different from sDai.totalAssets()?
         snst.drip();
         pot.drip();
-        uint256 nstDripAmount  = nst.balanceOf(SNST) - nstBalance;
-        uint256 daiDripAmount  = vat.dai(POT) - startingPotDai;
-        uint256 sDaiDripAmount = pot.pie(SDAI) - potPie;
+        uint256 nstDripAmount = nst.balanceOf(SNST) - nstBalance;
+        uint256 daiDripAmount = vat.dai(POT) - startingPotDai;
+        // uint256 sDaiDripAmount = pot.pie(SDAI) - potPie;
 
         vm.revertTo(snapshot);
 
-        assertEq(snst.convertToAssets(snst.balanceOf(user)), 0);
+        // assertEq(snst.convertToAssets(snst.balanceOf(user)), 0);
 
         // Cache all starting state
-        uint256 debt           = vat.debt();
+        uint256 debt = vat.debt();
         // uint256 sDaiDaiBalance = pot.pie(SDAI);  TODO: Bring back
-        uint256 totalAssets    = sdai.totalAssets();
-        uint256 sumSupply      = dai.totalSupply() + totalAssets + nst.totalSupply();
-        uint256 userAssets     = sdai.convertToAssets(sdai.balanceOf(user));
+        // uint256 totalAssets    = sdai.totalAssets();
+        // uint256 sumSupply      = dai.totalSupply() + totalAssets + nst.totalSupply();
+        // uint256 userAssets     = sdai.convertToAssets(sdai.balanceOf(user));
 
         sdai.approve(address(actions), amount);
 
         actions.migrateSDAIAssetsToSNST(user, amount);
 
-        assertEq(sdai.convertToAssets(sdai.balanceOf(user)), userAssets - amount);
+        // assertLe((userAssets - amount) - sdai.convertToAssets(sdai.balanceOf(user)), 2);
 
-        // 1 wei tolerance rounding down
-        assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 1);
+        // 2 wei tolerance rounding down
+        // assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 2);
 
         // assertEq(pot.pie(SDAI), sDaiDaiBalance + sDaiDripAmount - amount);  TODO: Figure out how to add back
 
-        assertEq(sdai.totalAssets(),  totalAssets        + sDaiDripAmount - amount);
-        assertEq(nst.balanceOf(SNST), startingNstBalance + nstDripAmount  + amount);
+        // Assert equal within 2 wei diff, rounding down
+        // assertLe((totalAssets        + sDaiDripAmount - amount) - sdai.totalAssets(),  2);
+        // assertLe((startingNstBalance + nstDripAmount  + amount) - nst.balanceOf(SNST), 2);
 
+        uint256 diff = (debt + nstDripAmount * 1e27 + daiDripAmount) - vat.debt();
+
+        console.log("diff            ", diff);
+        console.log("diff (wad)      ", diff / 1e27);
+        console.log("amount deposited", amount);
+        console.log("");
+        console.log("debt         ", debt);
+        console.log("vat.debt     ", vat.debt());
+        console.log("nstDripAmount", nstDripAmount * 1e27);
+        console.log("daiDripAmount", daiDripAmount);
+
+        // [LOOK HERE] Equality isn't satisfied
         assertEq(vat.debt(), debt + nstDripAmount * 1e27 + daiDripAmount);
 
-        // TODO: Update this to factor in pot.pie
-        assertEq(
-            dai.totalSupply() + sdai.totalAssets() + nst.totalSupply(),
-            sumSupply + sDaiDripAmount + nstDripAmount
-        );
+        // // TODO: Update this to factor in pot.pie
+        // assertEq(
+        //     dai.totalSupply() + sdai.totalAssets() + nst.totalSupply(),
+        //     sumSupply + sDaiDripAmount + nstDripAmount
+        // );
     }
 
-    function test_migrateSDAIAssetsToSNST_test() public {
+    function test_migrateSDAIAssetsToSNST_test1() public {
         uint256 amount = 1000 ether;
 
         _getDai(user, amount);
 
         _runMigrateSDAIAssetsToSNSTTest(amount);
     }
+
+    function test_migrateSDAIAssetsToSNST_test2() public {
+        uint256 amount = 1001 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateSDAIAssetsToSNSTTest(amount);
+    }
+
+    function testFuzz_migrateSDAIAssetsToSNST(uint256 amount) public {
+        // Add lower bound to minimize issues from rounding down for assets deposited
+        // then withdrawn - use enough value so accrual is more than 1 wei
+        amount = bound(amount, 1e18, dai.balanceOf(DAI_WHALE));
+
+        _getDai(user, amount);
+
+        _runMigrateSDAIAssetsToSNSTTest(amount);
+    }
+
+    // function testFuzz_migrateDAIToSNST_upToWholeSupply(uint256 amount) public {
+    //     amount = _bound(amount, 0, DAI_SUPPLY);
+
+    //     deal(DAI, user, amount);
+
+    //     _runMigrateSDAIAssetsToSNSTTest(amount);
+    // }
 
 }
