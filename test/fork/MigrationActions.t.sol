@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "erc20-helpers/interfaces/IERC20.sol";
-
 import "forge-std/Test.sol";
+
+import { IERC20 } from "erc20-helpers/interfaces/IERC20.sol";
 
 import { MigrationActions } from "src/MigrationActions.sol";
 
@@ -35,27 +35,87 @@ contract MigrationActionsIntegrationTestBase is Test {
 
     MigrationActions actions;
 
+    address user = address(this);
+
     function setUp() public virtual {
         vm.createSelectFork(
             "https://virtual.mainnet.rpc.tenderly.co/cc1fdd8b-c3a7-4092-8dc4-b07fbac3a5ba",
-            19871405
+            19871405  // July 18, 2024
         );
 
         actions = new MigrationActions(SDAI, SNST, DAI_JOIN, NST_JOIN);
     }
 
-    function test_firstTest() public {
-        assertEq(dai.balanceOf(address(this)), 0);
-        assertEq(dai.totalSupply(), DAI_SUPPLY);
-        _getDai(address(this), 1000);
-        assertEq(dai.balanceOf(address(this)), 1000);
-        assertEq(dai.totalSupply(), DAI_SUPPLY);
+    modifier assertDebtStateDoesNotChange() {
+        // Assert that the total internal debt does not change, as well as the sum of the
+        // ERC20 supply of DAI and NST
+        uint256 debt      = vat.debt();
+        uint256 sumSupply = _getSumSupply();
+        _;
+        assertEq(vat.debt(),      debt);
+        assertEq(_getSumSupply(), sumSupply);
     }
 
     // Using this instead of `deal` because totalSupply is important for this testing
     function _getDai(address receiver, uint256 amount) internal {
         vm.prank(DAI_WHALE);
         dai.transfer(receiver, amount);
+    }
+
+    function _getSumSupply() internal view returns (uint256) {
+        return dai.totalSupply() + nst.totalSupply();
+    }
+
+}
+
+contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    function test_migrateDAIToNST() public assertDebtStateDoesNotChange {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        dai.approve(address(actions), amount);
+
+        assertEq(dai.balanceOf(user), amount);
+        assertEq(nst.balanceOf(user), 0);
+
+        actions.migrateDAIToNST(user, amount);
+
+        assertEq(dai.balanceOf(user), 0);
+        assertEq(nst.balanceOf(user), amount);
+    }
+
+    function testFuzz_migrateDAIToNST(uint256 amount) public assertDebtStateDoesNotChange {
+        uint256 amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
+
+        _getDai(user, amount);
+
+        dai.approve(address(actions), amount);
+
+        assertEq(dai.balanceOf(user), amount);
+        assertEq(nst.balanceOf(user), 0);
+
+        actions.migrateDAIToNST(user, amount);
+
+        assertEq(dai.balanceOf(user), 0);
+        assertEq(nst.balanceOf(user), amount);
+    }
+
+    function testFuzz_migrateDAIToNST_upToWholeSupply(uint256 amount) public assertDebtStateDoesNotChange {
+        uint256 amount = _bound(amount, 0, DAI_SUPPLY);
+
+        deal(DAI, user, amount);
+
+        dai.approve(address(actions), amount);
+
+        assertEq(dai.balanceOf(user), amount);
+        assertEq(nst.balanceOf(user), 0);
+
+        actions.migrateDAIToNST(user, amount);
+
+        assertEq(dai.balanceOf(user), 0);
+        assertEq(nst.balanceOf(user), amount);
     }
 
 }
