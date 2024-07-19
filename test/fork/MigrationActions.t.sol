@@ -12,6 +12,7 @@ interface VatLike {
 }
 
 interface SavingsTokenLike is IERC20 {
+    function convertToAssets(uint256) external view returns(uint256);
     function drip() external;
 }
 
@@ -135,6 +136,8 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
         assertEq(dai.balanceOf(user), amount);
         assertEq(nst.balanceOf(SNST), startingBalance);
 
+        assertEq(snst.convertToAssets(snst.balanceOf(user)), 0);
+
         uint256 debt      = vat.debt();
         uint256 sumSupply = _getSumSupply();
 
@@ -142,6 +145,9 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
 
         assertEq(dai.balanceOf(user), 0);
         assertEq(nst.balanceOf(SNST), startingBalance + nstDripAmount + amount);
+
+        // Assert within 1 wei diff, rounding down
+        assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 1);
 
         assertEq(vat.debt(),      debt + nstDripAmount * 1e27);
         assertEq(_getSumSupply(), sumSupply + nstDripAmount);
