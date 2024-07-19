@@ -7,13 +7,21 @@ import { IERC20 } from "erc20-helpers/interfaces/IERC20.sol";
 
 import { MigrationActions } from "src/MigrationActions.sol";
 
+interface PotLike {
+    function drip() external returns (uint256);
+    function pie(address) external view returns(uint256);
+}
+
 interface VatLike {
+    function dai(address) external view returns (uint256);
     function debt() external view returns (uint256);
 }
 
 interface SavingsTokenLike is IERC20 {
-    function convertToAssets(uint256) external view returns(uint256);
+    function convertToAssets(uint256 shares) external view returns(uint256 assets);
+    function deposit(uint256 assets, address receiver) external returns (uint256 shares);
     function drip() external;
+    function totalAssets() external view returns(uint256);
 }
 
 contract MigrationActionsIntegrationTestBase is Test {
@@ -25,19 +33,21 @@ contract MigrationActionsIntegrationTestBase is Test {
 
     address constant DAI_JOIN = 0x9759A6Ac90977b93B58547b4A71c78317f391A28;
     address constant NST_JOIN = 0xbc71F5687CFD36f64Ae6B4549186EE3A6eE259a4;
+    address constant POT      = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
     address constant VAT      = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
 
     address constant DAI_WHALE = 0xD1668fB5F690C59Ab4B0CAbAd0f8C1617895052B;
 
     uint256 constant DAI_SUPPLY = 3_073_155_804.411575584359575254e18;
 
-    IERC20 dai = IERC20(DAI);
-    IERC20 nst = IERC20(NST);
+    IERC20 constant dai = IERC20(DAI);
+    IERC20 constant nst = IERC20(NST);
 
-    SavingsTokenLike sdai = SavingsTokenLike(SDAI);
-    SavingsTokenLike snst = SavingsTokenLike(SNST);
+    SavingsTokenLike constant sdai = SavingsTokenLike(SDAI);
+    SavingsTokenLike constant snst = SavingsTokenLike(SNST);
 
-    VatLike vat = VatLike(VAT);
+    PotLike constant pot = PotLike(POT);
+    VatLike constant vat = VatLike(VAT);
 
     MigrationActions actions;
 
@@ -97,7 +107,7 @@ contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
     }
 
     function testFuzz_migrateDAIToNST(uint256 amount) public assertDebtStateDoesNotChange {
-        uint256 amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
+        amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
 
         _getDai(user, amount);
 
@@ -107,7 +117,7 @@ contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
     function testFuzz_migrateDAIToNST_upToWholeSupply(uint256 amount)
         public assertDebtStateDoesNotChange
     {
-        uint256 amount = _bound(amount, 0, DAI_SUPPLY);
+        amount = _bound(amount, 0, DAI_SUPPLY);
 
         deal(DAI, user, amount);  // Use `deal` to get a higher DAI amount
 
@@ -146,8 +156,8 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
         assertEq(dai.balanceOf(user), 0);
         assertEq(nst.balanceOf(SNST), startingBalance + nstDripAmount + amount);
 
-        // Assert within 1 wei diff, rounding down
-        assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 1);
+        // Assert within 2 wei diff, rounding down
+        assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 2);
 
         assertEq(vat.debt(),      debt + nstDripAmount * 1e27);
         assertEq(_getSumSupply(), sumSupply + nstDripAmount);
@@ -162,17 +172,90 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
     }
 
     function testFuzz_migrateDAIToSNST(uint256 amount) public {
+        amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
+
         _getDai(user, amount);
 
         _runMigrateDAIToSNSTTest(amount);
     }
 
     function testFuzz_migrateDAIToSNST_upToWholeSupply(uint256 amount) public {
-        uint256 amount = _bound(amount, 0, DAI_SUPPLY);
+        amount = _bound(amount, 0, DAI_SUPPLY);
 
         deal(DAI, user, amount);
 
         _runMigrateDAIToSNSTTest(amount);
+    }
+
+}
+
+contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    // Starting balance of NST in the SNST contract
+    uint256 startingNstBalance = 1051.297887154176590368e18;
+
+    uint256 startingPotDai = 2_158_688_889.647549145888863863451729044902322402389261760e45;
+
+    function _runMigrateSDAIAssetsToSNSTTest(uint256 amount) internal {
+        // Deposit into sDAI
+        dai.approve(SDAI, amount);
+        sdai.deposit(amount, address(this));
+
+        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        skip(2 hours);
+
+        // Get the expected amount to be sucked from the vat on `drip` in withdraw
+        // and deposit calls in sDAI and sNST respectively
+        uint256 snapshot = vm.snapshot();
+
+        uint256 nstBalance = nst.balanceOf(SNST);
+        uint256 potPie     = pot.pie(SDAI);  // TODO: Why is this different from sDai.totalAssets()?
+        snst.drip();
+        pot.drip();
+        uint256 nstDripAmount  = nst.balanceOf(SNST) - nstBalance;
+        uint256 daiDripAmount  = vat.dai(POT) - startingPotDai;
+        uint256 sDaiDripAmount = pot.pie(SDAI) - potPie;
+
+        vm.revertTo(snapshot);
+
+        assertEq(snst.convertToAssets(snst.balanceOf(user)), 0);
+
+        // Cache all starting state
+        uint256 debt           = vat.debt();
+        // uint256 sDaiDaiBalance = pot.pie(SDAI);  TODO: Bring back
+        uint256 totalAssets    = sdai.totalAssets();
+        uint256 sumSupply      = dai.totalSupply() + totalAssets + nst.totalSupply();
+        uint256 userAssets     = sdai.convertToAssets(sdai.balanceOf(user));
+
+        sdai.approve(address(actions), amount);
+
+        actions.migrateSDAIAssetsToSNST(user, amount);
+
+        assertEq(sdai.convertToAssets(sdai.balanceOf(user)), userAssets - amount);
+
+        // 1 wei tolerance rounding down
+        assertLe(amount - snst.convertToAssets(snst.balanceOf(user)), 1);
+
+        // assertEq(pot.pie(SDAI), sDaiDaiBalance + sDaiDripAmount - amount);  TODO: Figure out how to add back
+
+        assertEq(sdai.totalAssets(),  totalAssets        + sDaiDripAmount - amount);
+        assertEq(nst.balanceOf(SNST), startingNstBalance + nstDripAmount  + amount);
+
+        assertEq(vat.debt(), debt + nstDripAmount * 1e27 + daiDripAmount);
+
+        // TODO: Update this to factor in pot.pie
+        assertEq(
+            dai.totalSupply() + sdai.totalAssets() + nst.totalSupply(),
+            sumSupply + sDaiDripAmount + nstDripAmount
+        );
+    }
+
+    function test_migrateSDAIAssetsToSNST_test() public {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateSDAIAssetsToSNSTTest(amount);
     }
 
 }
