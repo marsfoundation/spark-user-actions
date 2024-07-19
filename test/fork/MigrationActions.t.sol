@@ -8,9 +8,11 @@ import { IERC20 } from "erc20-helpers/interfaces/IERC20.sol";
 import { MigrationActions } from "src/MigrationActions.sol";
 
 interface VatLike {
-
     function debt() external view returns (uint256);
+}
 
+interface SavingsTokenLike is IERC20 {
+    function drip() external;
 }
 
 contract MigrationActionsIntegrationTestBase is Test {
@@ -30,6 +32,9 @@ contract MigrationActionsIntegrationTestBase is Test {
 
     IERC20 dai = IERC20(DAI);
     IERC20 nst = IERC20(NST);
+
+    SavingsTokenLike sdai = SavingsTokenLike(SDAI);
+    SavingsTokenLike snst = SavingsTokenLike(SNST);
 
     VatLike vat = VatLike(VAT);
 
@@ -70,11 +75,7 @@ contract MigrationActionsIntegrationTestBase is Test {
 
 contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
 
-    function test_migrateDAIToNST() public assertDebtStateDoesNotChange {
-        uint256 amount = 1000 ether;
-
-        _getDai(user, amount);
-
+    function _runMigrateDAIToNSTTest(uint256 amount) internal {
         dai.approve(address(actions), amount);
 
         assertEq(dai.balanceOf(user), amount);
@@ -84,6 +85,14 @@ contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
 
         assertEq(dai.balanceOf(user), 0);
         assertEq(nst.balanceOf(user), amount);
+    }
+
+    function test_migrateDAIToNST() public assertDebtStateDoesNotChange {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateDAIToNSTTest(amount);
     }
 
     function testFuzz_migrateDAIToNST(uint256 amount) public assertDebtStateDoesNotChange {
@@ -91,31 +100,73 @@ contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
 
         _getDai(user, amount);
 
+        _runMigrateDAIToNSTTest(amount);
+    }
+
+    function testFuzz_migrateDAIToNST_upToWholeSupply(uint256 amount)
+        public assertDebtStateDoesNotChange
+    {
+        uint256 amount = _bound(amount, 0, DAI_SUPPLY);
+
+        deal(DAI, user, amount);  // Use `deal` to get a higher DAI amount
+
+        _runMigrateDAIToNSTTest(amount);
+    }
+
+}
+
+contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    // Starting balance of NST in the SNST contract
+    uint256 startingBalance = 1051.297887154176590368e18;
+
+    function _runMigrateDAIToSNSTTest(uint256 amount) internal {
+        // Get the expected amount to be sucked from the vat on `drip` in deposit call in sNST
+        uint256 snapshot = vm.snapshot();
+
+        uint256 nstBalance = nst.balanceOf(SNST);
+        snst.drip();
+        uint256 nstDripAmount = nst.balanceOf(SNST) - nstBalance;
+
+        vm.revertTo(snapshot);
+
         dai.approve(address(actions), amount);
 
         assertEq(dai.balanceOf(user), amount);
-        assertEq(nst.balanceOf(user), 0);
+        assertEq(nst.balanceOf(SNST), startingBalance);
 
-        actions.migrateDAIToNST(user, amount);
+        uint256 debt      = vat.debt();
+        uint256 sumSupply = _getSumSupply();
+
+        actions.migrateDAIToSNST(user, amount);
 
         assertEq(dai.balanceOf(user), 0);
-        assertEq(nst.balanceOf(user), amount);
+        assertEq(nst.balanceOf(SNST), startingBalance + nstDripAmount + amount);
+
+        assertEq(vat.debt(),      debt + nstDripAmount * 1e27);
+        assertEq(_getSumSupply(), sumSupply + nstDripAmount);
     }
 
-    function testFuzz_migrateDAIToNST_upToWholeSupply(uint256 amount) public assertDebtStateDoesNotChange {
+    function test_migrateDAIToSNST() public {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateDAIToSNSTTest(amount);
+    }
+
+    function testFuzz_migrateDAIToSNST(uint256 amount) public {
+        _getDai(user, amount);
+
+        _runMigrateDAIToSNSTTest(amount);
+    }
+
+    function testFuzz_migrateDAIToSNST_upToWholeSupply(uint256 amount) public {
         uint256 amount = _bound(amount, 0, DAI_SUPPLY);
 
         deal(DAI, user, amount);
 
-        dai.approve(address(actions), amount);
-
-        assertEq(dai.balanceOf(user), amount);
-        assertEq(nst.balanceOf(user), 0);
-
-        actions.migrateDAIToNST(user, amount);
-
-        assertEq(dai.balanceOf(user), 0);
-        assertEq(nst.balanceOf(user), amount);
+        _runMigrateDAIToSNSTTest(amount);
     }
 
 }
