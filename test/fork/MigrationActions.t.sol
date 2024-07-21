@@ -254,6 +254,72 @@ contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTes
 
 }
 
+contract MigrateSDaiSharesToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    function _runMigrateSDAISharesToNSTTest(uint256 amount) internal {
+        // Deposit into sDAI
+        dai.approve(SDAI, amount);
+        sdai.deposit(amount, address(this));
+
+        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        skip(2 hours);
+
+        // Get the expected amount to be sucked from the vat on `drip` in withdraw call in sDAI
+        uint256 snapshot = vm.snapshot();
+        uint256 preDripPotDai = vat.dai(POT);
+        pot.drip();
+        uint256 daiDripAmount = vat.dai(POT) - preDripPotDai;
+        vm.revertTo(snapshot);
+
+        uint256 userAssets = sdai.convertToAssets(sdai.balanceOf(user));
+
+        sdai.approve(address(actions), userAssets);
+
+        // Cache all starting state
+        uint256 debt       = vat.debt();
+        uint256 sumSupply  = sdai.totalAssets() + nst.totalSupply() + dai.totalSupply();
+
+        actions.migrateSDAISharesToNST(user, sdai.balanceOf(user));
+
+        uint256 newUserAssets = sdai.convertToAssets(sdai.balanceOf(user));
+        uint256 newSumSupply  = sdai.totalAssets() + nst.totalSupply() + dai.totalSupply();
+
+        assertApproxEqAbs(nst.balanceOf(user), userAssets,           0);  // User gets specified amount of NST (exact)
+        assertApproxEqAbs(newUserAssets,       0,                    1);  // Users sDAI position reflected (conversion rounding x1)
+        assertApproxEqAbs(vat.debt(),          debt + daiDripAmount, 0);  // Vat accounting constant outside of sDAI accrual (exact)
+        assertApproxEqAbs(newSumSupply,        sumSupply,            2);  // Total supply of ERC-20 assets constant (conversion rounding x2)
+    }
+
+    function test_migrateSDAISharesToNST() public {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateSDAISharesToNSTTest(amount);
+    }
+
+    function testFuzz_migrateSDAISharesToNST(uint256 amount) public {
+        // Add lower bound to minimize issues from rounding down for assets deposited
+        // then withdrawn - use enough value so accrual is more than 1 wei
+        amount = _bound(amount, 1e18, dai.balanceOf(DAI_WHALE));
+
+        _getDai(user, amount);
+
+        _runMigrateSDAISharesToNSTTest(amount);
+    }
+
+    function testFuzz_migrateSDAISharesToNST_upToWholeSupply(uint256 amount) public {
+        // Add lower bound to minimize issues from rounding down for assets deposited
+        // then withdrawn - use enough value so accrual is more than 1 wei
+        amount = _bound(amount, 1e18, DAI_SUPPLY);
+
+        deal(DAI, user, amount);
+
+        _runMigrateSDAISharesToNSTTest(amount);
+    }
+
+}
+
 // TODO: migrateSDAIAssetsToNST migrateSDAIAssetsToNST
 
 contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
