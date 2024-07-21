@@ -79,7 +79,7 @@ contract MigrationActionsIntegrationTestBase is Test {
     }
 
     function _getSumSupply() internal view returns (uint256) {
-        return dai.totalSupply() + nst.totalSupply();
+        return dai.totalSupply() + nst.totalSupply();  // TODO: Update to sNST and sDAI totalAssets
     }
 
 }
@@ -188,6 +188,73 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
     }
 
 }
+
+contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    function _runMigrateSDAIAssetsToNSTTest(uint256 amount) internal {
+        // Deposit into sDAI
+        dai.approve(SDAI, amount);
+        sdai.deposit(amount, address(this));
+
+        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        skip(2 hours);
+
+        // Get the expected amount to be sucked from the vat on `drip` in withdraw call in sDAI
+        uint256 snapshot = vm.snapshot();
+        uint256 preDripPotDai = vat.dai(POT);
+        pot.drip();
+        uint256 daiDripAmount = vat.dai(POT) - preDripPotDai;
+        vm.revertTo(snapshot);
+
+        sdai.approve(address(actions), amount);
+
+        // Cache all starting state
+        uint256 userAssets = sdai.convertToAssets(sdai.balanceOf(user));
+        uint256 debt       = vat.debt();
+        uint256 sumSupply  = sdai.totalAssets() + nst.totalSupply() + dai.totalSupply();
+
+        actions.migrateSDAIAssetsToNST(user, amount);
+
+        uint256 newUserAssets = sdai.convertToAssets(sdai.balanceOf(user));
+        uint256 newSumSupply  = sdai.totalAssets() + nst.totalSupply() + dai.totalSupply();
+
+        assertApproxEqAbs(nst.balanceOf(user), amount,               0);  // User gets specified amount of NST (exact)
+        assertApproxEqAbs(newUserAssets,       userAssets - amount,  2);  // Users sDAI position reflected (conversion rounding x2)
+        assertApproxEqAbs(vat.debt(),          debt + daiDripAmount, 0);  // Vat accounting constant outside of sDAI accrual (exact)
+        assertApproxEqAbs(newSumSupply,        sumSupply,            2);  // Total supply of ERC-20 assets constant (conversion rounding x2)
+    }
+
+    function test_migrateSDAIAssetsToNST() public {
+        uint256 amount = 1000 ether;
+
+        _getDai(user, amount);
+
+        _runMigrateSDAIAssetsToNSTTest(amount);
+    }
+
+    function testFuzz_migrateSDAIAssetsToNST(uint256 amount) public {
+        // Add lower bound to minimize issues from rounding down for assets deposited
+        // then withdrawn - use enough value so accrual is more than 1 wei
+        amount = _bound(amount, 1e18, dai.balanceOf(DAI_WHALE));
+
+        _getDai(user, amount);
+
+        _runMigrateSDAIAssetsToNSTTest(amount);
+    }
+
+    function testFuzz_migrateSDAIAssetsToNST_upToWholeSupply(uint256 amount) public {
+        // Add lower bound to minimize issues from rounding down for assets deposited
+        // then withdrawn - use enough value so accrual is more than 1 wei
+        amount = _bound(amount, 1e18, DAI_SUPPLY);
+
+        deal(DAI, user, amount);
+
+        _runMigrateSDAIAssetsToNSTTest(amount);
+    }
+
+}
+
+// TODO: migrateSDAIAssetsToNST migrateSDAIAssetsToNST
 
 contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
 
