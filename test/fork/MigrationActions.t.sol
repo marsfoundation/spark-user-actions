@@ -9,7 +9,6 @@ import { MigrationActions } from "src/MigrationActions.sol";
 
 interface PotLike {
     function drip() external returns (uint256);
-    function pie(address) external view returns(uint256);
 }
 
 interface VatLike {
@@ -19,6 +18,7 @@ interface VatLike {
 
 interface SavingsTokenLike is IERC20 {
     function convertToAssets(uint256 shares) external view returns(uint256 assets);
+    function convertToShares(uint256 assets) external view returns(uint256 shares);
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
     function drip() external;
     function totalAssets() external view returns(uint256);
@@ -55,7 +55,7 @@ contract MigrationActionsIntegrationTestBase is Test {
 
     function setUp() public virtual {
         vm.createSelectFork(
-            "https://virtual.mainnet.rpc.tenderly.co/cc1fdd8b-c3a7-4092-8dc4-b07fbac3a5ba",
+            vm.envString("TENDERLY_STAGING_URL"),
             19871405  // July 18, 2024
         );
 
@@ -214,7 +214,7 @@ contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTes
         uint256 daiDripAmount = vat.dai(POT) - preDripPotDai;
         vm.revertTo(snapshot);
 
-        sdai.approve(address(actions), amount);
+        sdai.approve(address(actions), sdai.convertToShares(amount) + 1);  // Approve corresponding shares
 
         // Cache all starting state
         uint256 userAssets = sdai.convertToAssets(sdai.balanceOf(user));
@@ -280,7 +280,7 @@ contract MigrateSDaiSharesToNstIntegrationTest is MigrationActionsIntegrationTes
 
         uint256 userAssets = sdai.convertToAssets(sdai.balanceOf(user));
 
-        sdai.approve(address(actions), userAssets);
+        sdai.approve(address(actions), sdai.balanceOf(user));
 
         // Cache all starting state
         uint256 debt      = vat.debt();
