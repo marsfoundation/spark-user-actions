@@ -141,12 +141,10 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
 
     function _runMigrateDAIToSNSTTest(uint256 amount) internal {
         // Get the expected amount to be sucked from the vat on `drip` in deposit call in sNST
-        uint256 snapshot = vm.snapshot();
-
+        uint256 snapshot   = vm.snapshot();
         uint256 nstBalance = nst.balanceOf(SNST);
         snst.drip();
         uint256 nstDripAmount = nst.balanceOf(SNST) - nstBalance;
-
         vm.revertTo(snapshot);
 
         dai.approve(address(actions), amount);
@@ -170,7 +168,7 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
         assertEq(vat.debt(), debt + nstDripAmount * 1e27);
 
         // Two rounding events in nst.totalAssets()
-        assertApproxEqAbs(_getSumSupply(), sumSupply + nstDripAmount, 2);
+        assertApproxEqAbs(_getSumSupply(), sumSupply, 2);
     }
 
     function test_migrateDAIToSNST() public {
@@ -386,7 +384,7 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
         _runMigrateSDAIAssetsToSNSTTest(amount);
     }
 
-    function testFuzz_migrateDAIToSNST_upToWholeSupply(uint256 amount) public {
+    function testFuzz_migrateSDAIAssetsToSNST_upToWholeSupply(uint256 amount) public {
         // Add lower bound to minimize issues from rounding down for assets deposited
         // then withdrawn - use enough value so accrual is more than 1 wei
         amount = _bound(amount, 1e18, DAI_SUPPLY);
@@ -457,7 +455,7 @@ contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTe
         _runMigrateSDAISharesToSNSTTest(amount);
     }
 
-    function testFuzz_migrateDAIToSNST_upToWholeSupply(uint256 amount) public {
+    function testFuzz_migrateSDAISharesToSNST_upToWholeSupply(uint256 amount) public {
         // Add lower bound to minimize issues from rounding down for assets deposited
         // then withdrawn - use enough value so accrual is more than 1 wei
         amount = _bound(amount, 1e18, DAI_SUPPLY);
@@ -465,6 +463,60 @@ contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTe
         deal(DAI, user, amount);
 
         _runMigrateSDAISharesToSNSTTest(amount);
+    }
+
+}
+
+
+contract DowngradeNSTToDAIIntegrationTest is MigrationActionsIntegrationTestBase {
+
+    function _getNst(address receiver, uint256 amount) internal {
+        vm.prank(DAI_WHALE);
+        dai.transfer(address(this), amount);
+
+        dai.approve(address(actions), amount);
+        actions.migrateDAIToNST(receiver, amount);
+    }
+
+    function _runDowngradeNSTToDAITest(uint256 amount) internal {
+        nst.approve(address(actions), amount);
+
+        assertEq(nst.balanceOf(user), amount);
+        assertEq(dai.balanceOf(user), 0);
+
+        actions.downgradeNSTToDAI(user, amount);
+
+        assertEq(nst.balanceOf(user), 0);
+        assertEq(dai.balanceOf(user), amount);
+    }
+
+    function test_downgradeNSTToDAI() public assertDebtStateDoesNotChange {
+        uint256 amount = 1000 ether;
+
+        _getNst(user, amount);
+
+        _runDowngradeNSTToDAITest(amount);
+    }
+
+    function testFuzz_downgradeNSTToDAI(uint256 amount) public assertDebtStateDoesNotChange {
+        amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
+
+        _getNst(user, amount);
+
+        _runDowngradeNSTToDAITest(amount);
+    }
+
+    function testFuzz_downgradeNSTToDAI_upToWholeSupply(uint256 amount)
+        public assertDebtStateDoesNotChange
+    {
+        amount = _bound(amount, 0, DAI_SUPPLY);
+
+        deal(DAI, user, amount);  // Use `deal` to get a higher DAI amount
+
+        dai.approve(address(actions), amount);
+        actions.migrateDAIToNST(address(this), amount);
+
+        _runDowngradeNSTToDAITest(amount);
     }
 
 }
