@@ -204,7 +204,7 @@ contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTes
         dai.approve(SDAI, amount);
         sdai.deposit(amount, address(this));
 
-        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        // Warp to accrue value in both sDAI and sNST after drip is called on sDAI deposit
         skip(2 hours);
 
         // Get the expected amount to be sucked from the vat on `drip` in withdraw call in sDAI
@@ -268,7 +268,7 @@ contract MigrateSDaiSharesToNstIntegrationTest is MigrationActionsIntegrationTes
         dai.approve(SDAI, amount);
         sdai.deposit(amount, address(this));
 
-        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        // Warp to accrue value in both sDAI and sNST after drip is called on sDAI deposit
         skip(2 hours);
 
         // Get the expected amount to be sucked from the vat on `drip` in withdraw call in sDAI
@@ -333,7 +333,7 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
         dai.approve(SDAI, amount);
         sdai.deposit(amount, address(this));
 
-        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        // Warp to accrue value in both sDAI and sNST after drip is called on sDAI deposit
         skip(2 hours);
 
         // Get the expected amount to be sucked from the vat on `drip` in withdraw
@@ -360,7 +360,7 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
         uint256 userSNstAssets    = snst.convertToAssets(snst.balanceOf(user));
         uint256 expectedDebt      = debt + daiDripAmount + nstDripAmount * 1e27;
 
-        assertApproxEqAbs(userSNstAssets,    amount,                  2);  // User gets specified amount of sNST (conversion rounding x1)
+        assertApproxEqAbs(userSNstAssets,    amount,                  2);  // User gets specified amount of sNST (conversion rounding x2)
         assertApproxEqAbs(newUserSDaiAssets, userSDaiAssets - amount, 2);  // Users sDAI position reflected (conversion rounding x2)
         assertApproxEqAbs(vat.debt(),        expectedDebt,            0);  // Vat accounting constant outside of sDAI and nNST accrual (exact)]
         assertApproxEqAbs(_getSumSupply(),   sumSupply,               4);  // Total supply of ERC-20 assets constant (conversion rounding x4, totalAssets twice)
@@ -403,7 +403,7 @@ contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTe
         dai.approve(SDAI, amount);
         sdai.deposit(amount, address(this));
 
-        // Warp to accrue value in both sDAI adn sNST after drip is called on sDAI deposit
+        // Warp to accrue value in both sDAI and sNST after drip is called on sDAI deposit
         skip(2 hours);
 
         // Get the expected amount to be sucked from the vat on `drip` in withdraw
