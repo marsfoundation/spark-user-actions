@@ -6,8 +6,6 @@ import "forge-std/Test.sol";
 import { IERC20 }   from "forge-std/interfaces/IERC20.sol";
 import { IERC4626 } from "forge-std/interfaces/IERC4626.sol";
 
-import { VmSafe } from "forge-std/Vm.sol";
-
 import { PSMVariant1Actions } from "src/PSMVariant1Actions.sol";
 
 interface PotLike {
