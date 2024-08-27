@@ -92,7 +92,7 @@ contract MigrationActionsIntegrationTestBase is Test {
 
 }
 
-contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateDaiToUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     function _runMigrateDAIToUSDSTest(uint256 amount) internal {
         dai.approve(address(actions), amount);
@@ -134,7 +134,7 @@ contract MigrateDaiToNstIntegrationTest is MigrationActionsIntegrationTestBase {
 
 }
 
-contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateDaiToSUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     // Starting balance of USDS in the SUSDS contract
     uint256 startingBalance = 1051.297887154176590368e18;
@@ -197,7 +197,7 @@ contract MigrateDaiToSNstIntegrationTest is MigrationActionsIntegrationTestBase 
 
 }
 
-contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateSDaiAssetsToUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     function _runMigrateSDAIAssetsToUSDSTest(uint256 amount) internal {
         // Deposit into sDAI
@@ -261,7 +261,7 @@ contract MigrateSDaiAssetsToNstIntegrationTest is MigrationActionsIntegrationTes
 
 }
 
-contract MigrateSDaiSharesToNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateSDaiSharesToUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     function _runMigrateSDAISharesToUSDSTest(uint256 amount) internal {
         // Deposit into sDAI
@@ -326,7 +326,7 @@ contract MigrateSDaiSharesToNstIntegrationTest is MigrationActionsIntegrationTes
 
 }
 
-contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateSDaiAssetsToSUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     function _runMigrateSDAIAssetsToSUSDSTest(uint256 amount) internal {
         // Deposit into sDAI
@@ -357,10 +357,10 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
         actions.migrateSDAIAssetsToSUSDS(user, amount);
 
         uint256 newUserSDaiAssets = sdai.convertToAssets(sdai.balanceOf(user));
-        uint256 userSNstAssets    = susds.convertToAssets(susds.balanceOf(user));
+        uint256 userSUsdsAssets    = susds.convertToAssets(susds.balanceOf(user));
         uint256 expectedDebt      = debt + daiDripAmount + usdsDripAmount * 1e27;
 
-        assertApproxEqAbs(userSNstAssets,    amount,                  2);  // User gets specified amount of sUSDS (conversion rounding x2)
+        assertApproxEqAbs(userSUsdsAssets,    amount,                  2);  // User gets specified amount of sUSDS (conversion rounding x2)
         assertApproxEqAbs(newUserSDaiAssets, userSDaiAssets - amount, 2);  // Users sDAI position reflected (conversion rounding x2)
         assertApproxEqAbs(vat.debt(),        expectedDebt,            0);  // Vat accounting constant outside of sDAI and nUSDS accrual (exact)]
         assertApproxEqAbs(_getSumSupply(),   sumSupply,               4);  // Total supply of ERC-20 assets constant (conversion rounding x4, totalAssets twice)
@@ -396,7 +396,7 @@ contract MigrateSDaiAssetsToSNstIntegrationTest is MigrationActionsIntegrationTe
 
 }
 
-contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTestBase {
+contract MigrateSDaiSharesToSUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     function _runMigrateSDAISharesToSUSDSTest(uint256 amount) internal {
         // Deposit into sDAI
@@ -428,10 +428,10 @@ contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTe
         actions.migrateSDAISharesToSUSDS(user, sdai.balanceOf(user));
 
         uint256 newUserSDaiAssets = sdai.convertToAssets(sdai.balanceOf(user));
-        uint256 userSNstAssets    = susds.convertToAssets(susds.balanceOf(user));
+        uint256 userSUsdsAssets    = susds.convertToAssets(susds.balanceOf(user));
         uint256 expectedDebt      = debt + daiDripAmount + usdsDripAmount * 1e27;
 
-        assertApproxEqAbs(userSNstAssets,    userSDaiAssets, 2);  // User gets specified amount of sUSDS (conversion rounding x1)
+        assertApproxEqAbs(userSUsdsAssets,    userSDaiAssets, 2);  // User gets specified amount of sUSDS (conversion rounding x1)
         assertApproxEqAbs(newUserSDaiAssets, 0,              2);  // Users sDAI position reflected (conversion rounding x2)
         assertApproxEqAbs(vat.debt(),        expectedDebt,   0);  // Vat accounting constant outside of sDAI and nUSDS accrual (exact)]
         assertApproxEqAbs(_getSumSupply(),   sumSupply,      4);  // Total supply of ERC-20 assets constant (conversion rounding x4, totalAssets twice)
@@ -470,7 +470,7 @@ contract MigrateSDaiSharesToSNstIntegrationTest is MigrationActionsIntegrationTe
 
 contract DowngradeUSDSToDAIIntegrationTest is MigrationActionsIntegrationTestBase {
 
-    function _getNst(address receiver, uint256 amount) internal {
+    function _getUsds(address receiver, uint256 amount) internal {
         vm.prank(DAI_WHALE);
         dai.transfer(address(this), amount);
 
@@ -493,7 +493,7 @@ contract DowngradeUSDSToDAIIntegrationTest is MigrationActionsIntegrationTestBas
     function test_downgradeUSDSToDAI() public assertDebtStateDoesNotChange {
         uint256 amount = 1000 ether;
 
-        _getNst(user, amount);
+        _getUsds(user, amount);
 
         _runDowngradeUSDSToDAITest(amount);
     }
@@ -501,7 +501,7 @@ contract DowngradeUSDSToDAIIntegrationTest is MigrationActionsIntegrationTestBas
     function testFuzz_downgradeUSDSToDAI(uint256 amount) public assertDebtStateDoesNotChange {
         amount = _bound(amount, 0, dai.balanceOf(DAI_WHALE));
 
-        _getNst(user, amount);
+        _getUsds(user, amount);
 
         _runDowngradeUSDSToDAITest(amount);
     }
