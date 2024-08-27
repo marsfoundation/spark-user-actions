@@ -339,12 +339,12 @@ contract MigrateSDaiAssetsToSUsdsIntegrationTest is MigrationActionsIntegrationT
         // Get the expected amount to be sucked from the vat on `drip` in withdraw
         // and deposit calls in sDAI and sUSDS respectively
         uint256 snapshot      = vm.snapshot();
-        uint256 usdsBalance    = usds.balanceOf(SUSDS);
+        uint256 usdsBalance   = usds.balanceOf(SUSDS);
         uint256 preDripPotDai = vat.dai(POT);
         susds.drip();
         pot.drip();
         uint256 usdsDripAmount = usds.balanceOf(SUSDS) - usdsBalance;
-        uint256 daiDripAmount = vat.dai(POT) - preDripPotDai;
+        uint256 daiDripAmount  = vat.dai(POT) - preDripPotDai;
         vm.revertTo(snapshot);
 
         sdai.approve(address(actions), amount);
@@ -357,10 +357,10 @@ contract MigrateSDaiAssetsToSUsdsIntegrationTest is MigrationActionsIntegrationT
         actions.migrateSDAIAssetsToSUSDS(user, amount);
 
         uint256 newUserSDaiAssets = sdai.convertToAssets(sdai.balanceOf(user));
-        uint256 userSUsdsAssets    = susds.convertToAssets(susds.balanceOf(user));
+        uint256 userSUsdsAssets   = susds.convertToAssets(susds.balanceOf(user));
         uint256 expectedDebt      = debt + daiDripAmount + usdsDripAmount * 1e27;
 
-        assertApproxEqAbs(userSUsdsAssets,    amount,                  2);  // User gets specified amount of sUSDS (conversion rounding x2)
+        assertApproxEqAbs(userSUsdsAssets,   amount,                  2);  // User gets specified amount of sUSDS (conversion rounding x2)
         assertApproxEqAbs(newUserSDaiAssets, userSDaiAssets - amount, 2);  // Users sDAI position reflected (conversion rounding x2)
         assertApproxEqAbs(vat.debt(),        expectedDebt,            0);  // Vat accounting constant outside of sDAI and nUSDS accrual (exact)]
         assertApproxEqAbs(_getSumSupply(),   sumSupply,               4);  // Total supply of ERC-20 assets constant (conversion rounding x4, totalAssets twice)
@@ -414,7 +414,7 @@ contract MigrateSDaiSharesToSUsdsIntegrationTest is MigrationActionsIntegrationT
         susds.drip();
         pot.drip();
         uint256 usdsDripAmount = usds.balanceOf(SUSDS) - usdsBalance;
-        uint256 daiDripAmount = vat.dai(POT) - preDripPotDai;
+        uint256 daiDripAmount  = vat.dai(POT) - preDripPotDai;
         vm.revertTo(snapshot);
 
         uint256 userSDaiAssets = sdai.convertToAssets(sdai.balanceOf(user));
@@ -428,10 +428,10 @@ contract MigrateSDaiSharesToSUsdsIntegrationTest is MigrationActionsIntegrationT
         actions.migrateSDAISharesToSUSDS(user, sdai.balanceOf(user));
 
         uint256 newUserSDaiAssets = sdai.convertToAssets(sdai.balanceOf(user));
-        uint256 userSUsdsAssets    = susds.convertToAssets(susds.balanceOf(user));
+        uint256 userSUsdsAssets   = susds.convertToAssets(susds.balanceOf(user));
         uint256 expectedDebt      = debt + daiDripAmount + usdsDripAmount * 1e27;
 
-        assertApproxEqAbs(userSUsdsAssets,    userSDaiAssets, 2);  // User gets specified amount of sUSDS (conversion rounding x1)
+        assertApproxEqAbs(userSUsdsAssets,   userSDaiAssets, 2);  // User gets specified amount of sUSDS (conversion rounding x1)
         assertApproxEqAbs(newUserSDaiAssets, 0,              2);  // Users sDAI position reflected (conversion rounding x2)
         assertApproxEqAbs(vat.debt(),        expectedDebt,   0);  // Vat accounting constant outside of sDAI and nUSDS accrual (exact)]
         assertApproxEqAbs(_getSumSupply(),   sumSupply,      4);  // Total supply of ERC-20 assets constant (conversion rounding x4, totalAssets twice)

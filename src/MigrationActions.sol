@@ -46,7 +46,7 @@ contract MigrationActions {
         vat      = daiJoin.vat();
 
         // Infinite approvals
-        dai.approve(_daiJoin,  type(uint256).max);
+        dai.approve(_daiJoin,   type(uint256).max);
         usds.approve(_usdsJoin, type(uint256).max);
         usds.approve(_susds,    type(uint256).max);
 
@@ -127,7 +127,7 @@ contract MigrationActions {
     function downgradeUSDSToDAI(address receiver, uint256 assetsIn) external {
         usds.transferFrom(msg.sender, address(this), assetsIn);
         usdsJoin.join(address(this), assetsIn);
-        daiJoin.exit(receiver,      assetsIn);
+        daiJoin.exit(receiver,       assetsIn);
     }
 
     /**********************************************************************************************/

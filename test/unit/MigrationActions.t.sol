@@ -27,9 +27,9 @@ abstract contract MigrationActionsBase is Test {
     address receiver = makeAddr("receiver");
 
     function setUp() public {
-        dai   = new MockERC20("DAI", "DAI", 18);
+        dai   = new MockERC20("DAI",  "DAI",  18);
         usds  = new MockERC20("USDS", "USDS", 18);
-        sdai  = new ERC4626Mock(dai, "sDAI", "sDAI", 18);
+        sdai  = new ERC4626Mock(dai,  "sDAI",  "sDAI",  18);
         susds = new ERC4626Mock(usds, "sUSDS", "sUSDS", 18);
 
         vat      = new VatMock();
