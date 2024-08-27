@@ -147,7 +147,7 @@ This contract is used to upgrade from DAI, sDAI to USDS, sUSDS. Also contains a 
 
 Below is a diagram that outlines the migration path from sDAI to sUSDS. This migration path is the most complex and all other paths are subsets of this one.
 
-![sDAI to sUSDS](https://github.com/user-attachments/assets/a7b74251-f7bb-46e1-ac77-88a1e1c452b5)
+![sDAI to sUSDS](./.assets/sdai-to-usds.png)
 
 # Test
 

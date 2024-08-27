@@ -136,7 +136,7 @@ contract MigrationActions {
 
     function _migrateDAIToUSDS(address receiver, uint256 amount) internal {
         daiJoin.join(address(this), amount);
-        usdsJoin.exit(receiver,      amount);
+        usdsJoin.exit(receiver,     amount);
     }
 
 }
