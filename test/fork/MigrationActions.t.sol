@@ -27,12 +27,12 @@ interface SavingsTokenLike is IERC20 {
 contract MigrationActionsIntegrationTestBase is Test {
 
     address constant DAI   = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address constant USDS  = 0x798f111c92E38F102931F34D1e0ea7e671BDBE31;
+    address constant USDS  = 0xd2983525E903Ef198d5dD0777712EB66680463bc;
     address constant SDAI  = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
-    address constant SUSDS = 0xeA8AE08513f8230cAA8d031D28cB4Ac8CE720c68;
+    address constant SUSDS = 0xCd9BC6cE45194398d12e27e1333D5e1d783104dD;
 
     address constant DAI_JOIN  = 0x9759A6Ac90977b93B58547b4A71c78317f391A28;
-    address constant USDS_JOIN = 0xbc71F5687CFD36f64Ae6B4549186EE3A6eE259a4;
+    address constant USDS_JOIN = 0x8786A226918A4c6Cd7B3463ca200f156C964031f;
     address constant POT       = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
     address constant VAT       = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
 
@@ -54,10 +54,7 @@ contract MigrationActionsIntegrationTestBase is Test {
     address user = address(this);
 
     function setUp() public virtual {
-        vm.createSelectFork(
-            vm.envString("TENDERLY_STAGING_URL"),
-            19871405  // July 18, 2024
-        );
+        vm.createSelectFork(vm.envString("TENDERLY_STAGING_URL"), 20627496);
 
         actions = new MigrationActions(SDAI, SUSDS, DAI_JOIN, USDS_JOIN);
     }
@@ -137,7 +134,7 @@ contract MigrateDaiToUsdsIntegrationTest is MigrationActionsIntegrationTestBase 
 contract MigrateDaiToSUsdsIntegrationTest is MigrationActionsIntegrationTestBase {
 
     // Starting balance of USDS in the SUSDS contract
-    uint256 startingBalance = 1051.297887154176590368e18;
+    uint256 startingBalance = 1349.352634383042498711e18;
 
     function _runMigrateDAIToSUSDSTest(uint256 amount) internal {
         // Get the expected amount to be sucked from the vat on `drip` in deposit call in sUSDS
