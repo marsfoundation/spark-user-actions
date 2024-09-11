@@ -17,6 +17,13 @@ These contracts are designed to revert when edge cases present themselves such a
 
 These contracts will be deployed at well-known addresses to be used across the Maker ecosystem.
 
+# Deployments
+
+PSMVariant1Actions (Original PSM): [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
+PSMVariant1Actions (PSM Lite): [0x5803199F1085d52D1Bb527f24Dc1A2744e80A979](https://etherscan.io/address/0x5803199F1085d52D1Bb527f24Dc1A2744e80A979)  
+PSMVariant1Actions (USDS PSM Wrapper):  [0xd0A61F2963622e992e6534bde4D52fd0a89F39E0](https://etherscan.io/address/0xd0A61F2963622e992e6534bde4D52fd0a89F39E0)  
+MigrationActions: [0xf86141a5657Cf52AEB3E30eBccA5Ad3a8f714B89](https://etherscan.io/address/0xf86141a5657Cf52AEB3E30eBccA5Ad3a8f714B89)  
+
 # Top Level Actions Mapping
 
 Below is a diagram that outlines the top-level actions that can be taken by a user and the contracts that are used to facilitate these actions.
@@ -67,10 +74,6 @@ A three-way PSM will be provided here: https://github.com/marsfoundation/spark-p
 Intended to be used with the first version of the USDC PSM at `0x89B78CfA322F6C5dE0aBcEecab66Aee45393cC5A` and sDAI, but also compatible with the newer lite psm and USDS wrapper.
 
 The code is written in a general way, but it is expected for this to be used with the USDC PSM and sDAI. Please note that all values are measured in either USDC or DAI and not sDAI shares. This keeps the UI simple in that you can specify `100e18` of sDAI to mean "100 DAI worth of sDAI" instead of doing the share conversion.
-
-Deployed at (Original PSM): [0x52d298ff9e77e71c2eb1992260520e7b15257d99](https://etherscan.io/address/0x52d298ff9e77e71c2eb1992260520e7b15257d99)  
-Deployed at (PSM Lite): [0x5803199F1085d52D1Bb527f24Dc1A2744e80A979](https://etherscan.io/address/0x5803199F1085d52D1Bb527f24Dc1A2744e80A979)  
-Deployed at (USDS PSM Wrapper): TBD  
 
 ### swapAndDeposit
 
